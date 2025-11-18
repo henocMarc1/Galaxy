@@ -25,6 +25,7 @@ Sans ces étapes, vous verrez une erreur "Permission denied" et l'application ne
 
 Date de création: 18 novembre 2024
 Date de déploiement Replit: 18 novembre 2025
+Dernière mise à jour: 18 novembre 2025 - Design bleu raffiné avec hero dynamique et gestion des rabais
 
 ## 🔧 Configuration Replit
 
@@ -83,13 +84,20 @@ Le serveur se lance automatiquement au démarrage du Repl. L'application est acc
 ## ✨ Fonctionnalités implémentées
 
 ### Pages utilisateur
-- ✅ **Accueil** - Bannière promo, recherche, catégories, meilleures ventes, nouveautés
-- ✅ **Liste produits** - Filtres par catégorie, prix, recherche dynamique
-- ✅ **Fiche produit** - Images, description, prix, stock, sélecteur quantité
-- ✅ **Panier** - LocalStorage, modification quantités, calcul total
-- ✅ **Checkout** - Formulaire livraison, choix paiement (Mobile Money, Carte, Cash)
+- ✅ **Accueil** - Hero section avec rotation automatique des produits promo toutes les 5 secondes, recherche, produits en tendance
+- ✅ **Liste produits** - Filtres par catégorie, prix, recherche dynamique, affichage des rabais
+- ✅ **Fiche produit** - Images, description, prix avec rabais, stock, sélecteur quantité
+- ✅ **Panier** - LocalStorage avec gestion des rabais, modification quantités, calcul total avec économies
+- ✅ **Checkout** - Formulaire livraison, affichage des rabais et économies totales, choix paiement (Mobile Money, Carte, Cash)
 - ✅ **Authentification** - Inscription/Connexion Firebase
 - ✅ **Profil** - Informations personnelles, historique commandes
+
+### Système de promotions
+- ✅ **Hero dynamique** - Rotation automatique des produits en promo toutes les 5 secondes avec badges de rabais
+- ✅ **Badges de réduction** - Affichage visuel des pourcentages de rabais sur les produits
+- ✅ **Prix barrés** - Prix originaux affichés avec barré pour montrer la réduction
+- ✅ **Économies calculées** - Montant économisé affiché sur chaque produit et dans le résumé total
+- ✅ **Persistance des rabais** - Les informations de rabais sont conservées dans le panier via localStorage
 
 ### Dashboard Admin
 - ✅ **Gestion produits** - CRUD complet (Créer, Lire, Modifier, Supprimer)
@@ -137,18 +145,22 @@ Accédez à **init.html** et cliquez sur "Initialiser les données" pour ajouter
 ## 🎨 Design
 
 **Palette de couleurs:**
-- Bleu primaire: #1E40AF
-- Bleu secondaire: #3B82F6
-- Bleu accent: #60A5FA
+- Bleu primaire: #1E40AF (bleu profond et élégant)
+- Bleu secondaire: #3B82F6 (bleu vif)
+- Bleu accent: #60A5FA (bleu clair)
 - Fond clair: #F8FAFC
 - Texte: #334155
 
 **Caractéristiques design:**
-- Style premium et minimaliste
+- Style moderne et minimaliste avec palette bleue raffinée
+- Hero section avec rotation automatique des produits
+- Boutons arrondis (pill-shaped)
+- Cartes produits avec ombres douces et coins arrondis
 - Responsive Mobile First
-- Navigation intuitive
-- Cartes produits avec hover effects
-- Formulaires clairs et accessibles
+- Navigation minimaliste avec icônes rondes
+- Section catégories disponible uniquement dans le menu dropdown
+- Animations et effets de survol modernes
+- Badges de rabais animés avec effet pulse
 
 ## 💾 Données LocalStorage
 
