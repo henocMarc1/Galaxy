@@ -65,6 +65,25 @@ function updateAuthUI() {
 document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     updateAuthUI();
+    setupCategoriesDropdown();
 });
+
+function setupCategoriesDropdown() {
+    const categoriesBtn = document.getElementById('categoriesBtn');
+    const categoriesMenu = document.getElementById('categoriesMenu');
+    
+    if (categoriesBtn && categoriesMenu) {
+        categoriesBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            categoriesMenu.classList.toggle('show');
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!categoriesMenu.contains(e.target) && !categoriesBtn.contains(e.target)) {
+                categoriesMenu.classList.remove('show');
+            }
+        });
+    }
+}
 
 window.updateCartCount = updateCartCount;

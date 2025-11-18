@@ -1,6 +1,6 @@
 import { auth, database } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { ref, push, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { ref, push, get, runTransaction, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const checkoutForm = document.getElementById('checkoutForm');
 const orderSummary = document.getElementById('orderSummary');
@@ -92,8 +92,66 @@ checkoutForm.addEventListener('submit', async (e) => {
     };
 
     try {
+        for (const item of cart) {
+            const productRef = ref(database, `products/${item.id}`);
+            const productSnapshot = await get(productRef);
+            
+            if (productSnapshot.exists()) {
+                const productData = productSnapshot.val();
+                const newStock = productData.stock - item.quantity;
+                
+                if (newStock < 0) {
+                    alert(`Stock insuffisant pour "${item.name}". Stock actuel : ${productData.stock}, quantité demandée : ${item.quantity}. Veuillez ajuster votre panier.`);
+                    return;
+                }
+            } else {
+                alert(`Le produit "${item.name}" n'existe plus. Veuillez retirer cet article de votre panier.`);
+                return;
+            }
+        }
+
         const ordersRef = ref(database, 'orders');
-        await push(ordersRef, orderData);
+        const newOrderRef = await push(ordersRef, orderData);
+        const orderId = newOrderRef.key;
+
+        let stockUpdateFailed = false;
+        let failedProduct = '';
+
+        for (const item of cart) {
+            const productRef = ref(database, `products/${item.id}/stock`);
+            
+            try {
+                await runTransaction(productRef, (currentStock) => {
+                    if (currentStock === null) {
+                        return currentStock;
+                    }
+                    
+                    const newStock = currentStock - item.quantity;
+                    if (newStock < 0) {
+                        stockUpdateFailed = true;
+                        failedProduct = item.name;
+                        return;
+                    }
+                    
+                    return newStock;
+                });
+                
+                if (stockUpdateFailed) {
+                    break;
+                }
+            } catch (error) {
+                console.error(`Erreur lors de la mise à jour du stock pour ${item.name}:`, error);
+                stockUpdateFailed = true;
+                failedProduct = item.name;
+                break;
+            }
+        }
+
+        if (stockUpdateFailed) {
+            await remove(ref(database, `orders/${orderId}`));
+            alert(`Le stock de "${failedProduct}" a changé pendant le traitement. La commande a été annulée. Veuillez réessayer.`);
+            return;
+        }
 
         localStorage.removeItem('cart');
         window.updateCartCount();

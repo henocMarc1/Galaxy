@@ -66,7 +66,21 @@ function applyFilters() {
         .map(cb => cb.value);
 
     if (selectedCategories.length > 0) {
-        filteredProducts = filteredProducts.filter(p => selectedCategories.includes(p.category));
+        const hasPromotions = selectedCategories.includes('Promotions');
+        const otherCategories = selectedCategories.filter(c => c !== 'Promotions');
+        
+        filteredProducts = filteredProducts.filter(p => {
+            const matchesCategory = otherCategories.length === 0 || otherCategories.includes(p.category);
+            const matchesPromotion = !hasPromotions || (p.discount && p.discount > 0);
+            
+            if (hasPromotions && otherCategories.length > 0) {
+                return matchesCategory && matchesPromotion;
+            } else if (hasPromotions) {
+                return matchesPromotion;
+            } else {
+                return matchesCategory;
+            }
+        });
     }
 
     const selectedPrice = document.querySelector('.price-filter:checked')?.value;
@@ -101,26 +115,40 @@ function displayProducts() {
         return;
     }
 
-    productsGrid.innerHTML = filteredProducts.map(product => `
+    productsGrid.innerHTML = filteredProducts.map(product => {
+        const discount = product.discount || 0;
+        const hasDiscount = discount > 0;
+        const discountedPrice = hasDiscount ? product.price * (1 - discount / 100) : product.price;
+        
+        return `
         <div class="product-card">
             ${product.isNew ? '<span class="product-badge new">Nouveau</span>' : ''}
             ${product.featured ? '<span class="product-badge featured">Populaire</span>' : ''}
+            ${hasDiscount ? `<span class="product-badge promo">-${discount}%</span>` : ''}
             <a href="product-detail.html?id=${product.id}">
                 <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x220/E2E8F0/64748B?text=Image+non+disponible'">
                 <div class="product-info">
                     <p class="product-category">${product.category}</p>
                     <h3 class="product-name">${product.name}</h3>
-                    <p class="product-price">${product.price.toLocaleString()} FCFA</p>
+                    <div class="product-price-container">
+                        ${hasDiscount ? `
+                            <p class="product-price-original">${product.price.toLocaleString()} FCFA</p>
+                            <p class="product-price">${Math.round(discountedPrice).toLocaleString()} FCFA</p>
+                        ` : `
+                            <p class="product-price">${product.price.toLocaleString()} FCFA</p>
+                        `}
+                    </div>
                     <p class="product-stock ${product.stock === 0 ? 'out-of-stock' : ''}">
                         ${product.stock > 0 ? `En stock (${product.stock})` : 'Rupture de stock'}
                     </p>
                 </div>
             </a>
-            <button class="add-to-cart-btn" onclick="addToCart('${product.id}', '${product.name}', ${product.price}, '${product.image}', ${product.stock})" ${product.stock === 0 ? 'disabled' : ''}>
+            <button class="add-to-cart-btn" onclick="addToCart('${product.id}', '${product.name}', ${hasDiscount ? Math.round(discountedPrice) : product.price}, '${product.image}', ${product.stock})" ${product.stock === 0 ? 'disabled' : ''}>
                 ${product.stock > 0 ? 'Ajouter au panier' : 'Indisponible'}
             </button>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 categoryFilters.forEach(filter => filter.addEventListener('change', applyFilters));

@@ -83,6 +83,7 @@ async function loadProducts() {
                             <th>Nom</th>
                             <th>Catégorie</th>
                             <th>Prix</th>
+                            <th>Rabais</th>
                             <th>Stock</th>
                             <th>Actions</th>
                         </tr>
@@ -94,6 +95,7 @@ async function loadProducts() {
                                 <td>${product.name}</td>
                                 <td>${product.category}</td>
                                 <td>${product.price.toLocaleString()} FCFA</td>
+                                <td>${product.discount || 0}%</td>
                                 <td>${product.stock}</td>
                                 <td>
                                     <button class="action-btn edit-btn" onclick="editProduct('${product.id}')">Modifier</button>
@@ -248,6 +250,7 @@ productForm.addEventListener('submit', async (e) => {
         category: document.getElementById('productCategory').value,
         description: document.getElementById('productDescription').value,
         price: parseFloat(document.getElementById('productPrice').value),
+        discount: parseInt(document.getElementById('productDiscount').value) || 0,
         stock: parseInt(document.getElementById('productStock').value),
         image: document.getElementById('productImage').value,
         featured: document.getElementById('productFeatured').checked,
@@ -287,6 +290,7 @@ window.editProduct = async function(productId) {
             document.getElementById('productCategory').value = product.category;
             document.getElementById('productDescription').value = product.description;
             document.getElementById('productPrice').value = product.price;
+            document.getElementById('productDiscount').value = product.discount || 0;
             document.getElementById('productStock').value = product.stock;
             document.getElementById('productImage').value = product.image;
             document.getElementById('productFeatured').checked = product.featured || false;
