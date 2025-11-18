@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produits - Galax</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">
+                <h1>Galax</h1>
+                <p class="slogan">Votre supermarché, vos parfums de rêve</p>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="products.html">Produits</a>
+                <a href="cart.html" class="cart-link">
+                    <span>Panier</span>
+                    <span class="cart-count">0</span>
+                </a>
+                <a href="profile.html" id="profileLink" style="display: none;">Profil</a>
+                <a href="auth.html" id="authLink">Connexion</a>
+                <button id="logoutBtn" style="display: none;">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>Nos Produits</h1>
+        </div>
+    </section>
+
+    <section class="products-page">
+        <div class="container">
+            <div class="products-layout">
+                <aside class="filters-sidebar">
+                    <h3>Filtres</h3>
+                    
+                    <div class="filter-group">
+                        <h4>Catégories</h4>
+                        <label><input type="checkbox" value="Parfums" class="category-filter"> Parfums</label>
+                        <label><input type="checkbox" value="Épicerie" class="category-filter"> Épicerie</label>
+                        <label><input type="checkbox" value="Boissons" class="category-filter"> Boissons</label>
+                        <label><input type="checkbox" value="Hygiène & Beauté" class="category-filter"> Hygiène & Beauté</label>
+                        <label><input type="checkbox" value="Produits ménagers" class="category-filter"> Produits ménagers</label>
+                        <label><input type="checkbox" value="Fruits & Légumes" class="category-filter"> Fruits & Légumes</label>
+                        <label><input type="checkbox" value="Snacks" class="category-filter"> Snacks</label>
+                        <label><input type="checkbox" value="Surgelés" class="category-filter"> Surgelés</label>
+                        <label><input type="checkbox" value="Bébé & Maman" class="category-filter"> Bébé & Maman</label>
+                    </div>
+
+                    <div class="filter-group">
+                        <h4>Prix</h4>
+                        <label><input type="radio" name="price" value="all" checked class="price-filter"> Tous les prix</label>
+                        <label><input type="radio" name="price" value="0-5000" class="price-filter"> Moins de 5 000 FCFA</label>
+                        <label><input type="radio" name="price" value="5000-10000" class="price-filter"> 5 000 - 10 000 FCFA</label>
+                        <label><input type="radio" name="price" value="10000-20000" class="price-filter"> 10 000 - 20 000 FCFA</label>
+                        <label><input type="radio" name="price" value="20000-50000" class="price-filter"> 20 000 - 50 000 FCFA</label>
+                        <label><input type="radio" name="price" value="50000+" class="price-filter"> Plus de 50 000 FCFA</label>
+                    </div>
+
+                    <div class="filter-group">
+                        <h4>Recherche</h4>
+                        <input type="text" id="filterSearch" placeholder="Rechercher...">
+                    </div>
+
+                    <button id="clearFilters" class="btn-secondary">Réinitialiser filtres</button>
+                </aside>
+
+                <div class="products-content">
+                    <div class="products-header">
+                        <p id="productsCount">Chargement...</p>
+                    </div>
+                    <div class="products-grid" id="productsGrid"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Galax - Votre supermarché, vos parfums de rêve</p>
+        </div>
+    </footer>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/products-page.js"></script>
+</body>
+</html>

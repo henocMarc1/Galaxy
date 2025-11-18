@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galax - Votre supermarché, vos parfums de rêve</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">
+                <h1>Galax</h1>
+                <p class="slogan">Votre supermarché, vos parfums de rêve</p>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="products.html">Produits</a>
+                <a href="cart.html" class="cart-link">
+                    <span>Panier</span>
+                    <span class="cart-count">0</span>
+                </a>
+                <a href="profile.html" id="profileLink" style="display: none;">Profil</a>
+                <a href="auth.html" id="authLink">Connexion</a>
+                <button id="logoutBtn" style="display: none;">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-banner">
+        <div class="container">
+            <div class="banner-content">
+                <h2>Découvrez nos parfums de luxe</h2>
+                <p>Collections exclusives de parfums arabes et internationaux</p>
+                <a href="products.html?category=Parfums" class="btn-primary">Voir les parfums</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="search-section">
+        <div class="container">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Rechercher un produit...">
+                <button id="searchBtn">Rechercher</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="categories-section">
+        <div class="container">
+            <h2>Catégories</h2>
+            <div class="categories-grid">
+                <a href="products.html?category=Parfums" class="category-card featured">
+                    <div class="category-icon">🌟</div>
+                    <h3>Parfums</h3>
+                    <p>Luxe & Arabes</p>
+                </a>
+                <a href="products.html?category=Épicerie" class="category-card">
+                    <div class="category-icon">🛒</div>
+                    <h3>Épicerie</h3>
+                </a>
+                <a href="products.html?category=Boissons" class="category-card">
+                    <div class="category-icon">🥤</div>
+                    <h3>Boissons</h3>
+                </a>
+                <a href="products.html?category=Hygiène & Beauté" class="category-card">
+                    <div class="category-icon">💄</div>
+                    <h3>Hygiène & Beauté</h3>
+                </a>
+                <a href="products.html?category=Produits ménagers" class="category-card">
+                    <div class="category-icon">🧼</div>
+                    <h3>Produits ménagers</h3>
+                </a>
+                <a href="products.html?category=Fruits & Légumes" class="category-card">
+                    <div class="category-icon">🥬</div>
+                    <h3>Fruits & Légumes</h3>
+                </a>
+                <a href="products.html?category=Snacks" class="category-card">
+                    <div class="category-icon">🍿</div>
+                    <h3>Snacks</h3>
+                </a>
+                <a href="products.html?category=Surgelés" class="category-card">
+                    <div class="category-icon">❄️</div>
+                    <h3>Surgelés</h3>
+                </a>
+                <a href="products.html?category=Bébé & Maman" class="category-card">
+                    <div class="category-icon">👶</div>
+                    <h3>Bébé & Maman</h3>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="products-section">
+        <div class="container">
+            <h2>Meilleures ventes</h2>
+            <div class="products-grid" id="bestSellers"></div>
+        </div>
+    </section>
+
+    <section class="products-section">
+        <div class="container">
+            <h2>Nouveautés</h2>
+            <div class="products-grid" id="newArrivals"></div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Galax - Votre supermarché, vos parfums de rêve</p>
+        </div>
+    </footer>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/home.js"></script>
+</body>
+</html>

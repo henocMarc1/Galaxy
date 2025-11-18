@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produit - Galax</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand">
+                <h1>Galax</h1>
+                <p class="slogan">Votre supermarché, vos parfums de rêve</p>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="products.html">Produits</a>
+                <a href="cart.html" class="cart-link">
+                    <span>Panier</span>
+                    <span class="cart-count">0</span>
+                </a>
+                <a href="profile.html" id="profileLink" style="display: none;">Profil</a>
+                <a href="auth.html" id="authLink">Connexion</a>
+                <button id="logoutBtn" style="display: none;">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="product-detail">
+        <div class="container">
+            <div id="productContent"></div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Galax - Votre supermarché, vos parfums de rêve</p>
+        </div>
+    </footer>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/product-detail.js"></script>
+</body>
+</html>

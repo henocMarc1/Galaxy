@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initialisation - Galax</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <section class="page-header">
+        <div class="container">
+            <h1>Initialisation de la base de données</h1>
+        </div>
+    </section>
+
+    <section style="padding: 3rem 0; text-align: center;">
+        <div class="container">
+            <div style="max-width: 600px; margin: 0 auto; background: white; padding: 2rem; border-radius: 10px;">
+                <h2>Configuration initiale</h2>
+                <p style="margin: 1.5rem 0;">Cliquez sur le bouton ci-dessous pour initialiser la base de données avec des produits d'exemple.</p>
+                <p style="margin: 1.5rem 0; color: #F59E0B;"><strong>Note:</strong> Cette action n'ajoutera des produits que si la base est vide.</p>
+                <button id="initDataBtn" class="btn-primary">Initialiser les données</button>
+                <br><br>
+                <a href="index.html" class="btn-secondary">Retour à l'accueil</a>
+                
+                <div style="margin-top: 2rem; padding: 1rem; background: #F8FAFC; border-radius: 5px;">
+                    <h3>Instructions pour l'admin</h3>
+                    <p>Pour créer un compte admin, créez d'abord un compte utilisateur via la page d'inscription.</p>
+                    <p>Ensuite, allez dans la console Firebase → Realtime Database → users → votre UID → changez "role" de "customer" à "admin".</p>
+                    <p>Vous pourrez ensuite accéder au panneau admin : <a href="admin.html">admin.html</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Galax - Votre supermarché, vos parfums de rêve</p>
+        </div>
+    </footer>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/init-data.js"></script>
+</body>
+</html>
