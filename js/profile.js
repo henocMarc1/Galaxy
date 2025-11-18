@@ -34,15 +34,26 @@ async function loadUserProfile() {
         }
     } catch (error) {
         console.error('Erreur lors du chargement du profil:', error);
-        if (error.code === 'PERMISSION_DENIED') {
-            profileInfo.innerHTML = `
-                <div style="padding: 1.5rem; background: #FEF3C7; border-radius: 10px; border-left: 4px solid #F59E0B;">
-                    <h3 style="color: #92400E; margin-bottom: 0.5rem;">⚠️ Configuration requise</h3>
-                    <p style="color: #78350F; font-size: 0.9rem;">Firebase non configuré</p>
-                    <a href="CONFIGURATION_FIREBASE.md" style="color: #1E40AF; text-decoration: underline; font-size: 0.9rem;">Voir le guide</a>
-                </div>
-            `;
+        console.error('Code erreur profil:', error.code);
+        console.error('Message erreur profil:', error.message);
+        
+        let errorMsg = `
+            <div style="padding: 1.5rem; background: #FEF3C7; border-radius: 10px; border-left: 4px solid #F59E0B;">
+                <h3 style="color: #92400E; margin-bottom: 0.5rem;">⚠️ Erreur de chargement</h3>`;
+        
+        if (error.code) {
+            errorMsg += `<p style="color: #92400E; font-size: 0.85rem;"><strong>Code:</strong> ${error.code}</p>`;
         }
+        if (error.message) {
+            errorMsg += `<p style="color: #92400E; font-size: 0.85rem;"><strong>Message:</strong> ${error.message}</p>`;
+        }
+        
+        errorMsg += `
+                <p style="color: #78350F; font-size: 0.9rem; margin-top: 0.5rem;">Vérifiez la configuration Firebase.</p>
+                <a href="CONFIGURATION_FIREBASE.md" target="_blank" style="color: #1E40AF; text-decoration: underline; font-size: 0.9rem; font-weight: bold;">📖 Voir le guide</a>
+            </div>
+        `;
+        profileInfo.innerHTML = errorMsg;
     }
 }
 
@@ -92,17 +103,34 @@ async function loadUserOrders() {
         }
     } catch (error) {
         console.error('Erreur lors du chargement des commandes:', error);
-        if (error.code === 'PERMISSION_DENIED') {
-            ordersContainer.innerHTML = `
-                <div style="padding: 2rem; background: #FEF3C7; border-radius: 10px; border-left: 4px solid #F59E0B;">
-                    <h3 style="color: #92400E; margin-bottom: 1rem;">⚠️ Configuration Firebase requise</h3>
-                    <p style="color: #78350F;">Les règles de sécurité Firebase ne sont pas encore configurées.</p>
-                    <p style="color: #78350F; margin-top: 0.5rem;">Veuillez suivre le guide : <a href="CONFIGURATION_FIREBASE.md" style="color: #1E40AF; text-decoration: underline;">CONFIGURATION_FIREBASE.md</a></p>
-                </div>
-            `;
-        } else {
-            ordersContainer.innerHTML = '<p>Erreur lors du chargement des commandes. Veuillez réessayer plus tard.</p>';
+        console.error('Code erreur:', error.code);
+        console.error('Message erreur:', error.message);
+        console.error('Détails:', JSON.stringify(error));
+        
+        let errorMessage = `
+            <div style="padding: 2rem; background: #FEF3C7; border-radius: 10px; border-left: 4px solid #F59E0B;">
+                <h3 style="color: #92400E; margin-bottom: 1rem;">⚠️ Erreur de chargement</h3>
+                <p style="color: #78350F; margin-bottom: 1rem;">Impossible de charger vos commandes. Détails de l'erreur :</p>`;
+        
+        if (error.code) {
+            errorMessage += `<p style="color: #92400E; font-size: 0.9rem; margin-bottom: 0.5rem;"><strong>Code:</strong> ${error.code}</p>`;
         }
+        if (error.message) {
+            errorMessage += `<p style="color: #92400E; font-size: 0.9rem; margin-bottom: 1rem;"><strong>Message:</strong> ${error.message}</p>`;
+        }
+        
+        errorMessage += `
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid #FCD34D;">
+                <p style="color: #78350F; margin-bottom: 0.5rem;"><strong>Vérifications à faire :</strong></p>
+                <ol style="color: #78350F; margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Vérifiez que la <strong>Realtime Database</strong> est créée sur Firebase</li>
+                    <li>Vérifiez les <strong>règles de sécurité</strong> dans Firebase</li>
+                    <li>Vérifiez que vous êtes bien <strong>connecté</strong> à l'application</li>
+                </ol>
+                <p style="color: #78350F;">📖 Guide complet : <a href="CONFIGURATION_FIREBASE.md" target="_blank" style="color: #1E40AF; text-decoration: underline; font-weight: bold;">CONFIGURATION_FIREBASE.md</a></p>
+            </div>
+        `;
+        ordersContainer.innerHTML = errorMessage;
     }
 }
 
