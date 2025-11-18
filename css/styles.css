@@ -25,6 +25,10 @@ body {
     background-color: var(--light-bg);
 }
 
+a {
+    text-decoration: none;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -114,6 +118,79 @@ body {
 
 .nav-links button:hover {
     background: var(--secondary-color);
+}
+
+.categories-dropdown {
+    position: relative;
+}
+
+.categories-btn {
+    background: transparent;
+    color: var(--text-color);
+    border: none;
+    padding: 0;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.3s;
+}
+
+.categories-btn:hover {
+    background: transparent;
+    color: var(--primary-color);
+}
+
+.hamburger-icon {
+    font-size: 1.2rem;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 220px;
+    margin-top: 0.5rem;
+    display: none;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.dropdown-menu.show {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 0.8rem 1.2rem;
+    color: var(--text-color);
+    transition: background 0.2s, color 0.2s;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dropdown-menu a:last-child {
+    border-bottom: none;
+}
+
+.dropdown-menu a:hover {
+    background: var(--light-bg);
+    color: var(--primary-color);
 }
 
 .hero-banner {
@@ -384,6 +461,21 @@ body {
     top: 45px;
 }
 
+.product-badge.promo {
+    background: #EF4444;
+    left: 10px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
 .product-info {
     padding: 1rem;
 }
@@ -401,11 +493,25 @@ body {
     margin: 0.5rem 0;
 }
 
+.product-price-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 .product-price {
     color: var(--primary-color);
     font-size: 1.3rem;
     font-weight: 700;
-    margin: 0.5rem 0;
+    margin: 0;
+}
+
+.product-price-original {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    text-decoration: line-through;
+    opacity: 0.6;
+    margin: 0;
 }
 
 .product-stock {
@@ -536,6 +642,14 @@ body {
     color: var(--primary-color);
     font-weight: 700;
     margin: 1rem 0;
+}
+
+.product-detail-price-original {
+    font-size: 1.5rem;
+    color: var(--text-color);
+    text-decoration: line-through;
+    opacity: 0.6;
+    margin: 0.5rem 0;
 }
 
 .quantity-selector {
