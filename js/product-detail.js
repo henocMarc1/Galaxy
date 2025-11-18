@@ -58,7 +58,15 @@ function displayProduct(product) {
                     <button onclick="increaseQuantity(${product.stock})">+</button>
                 </div>
                 
-                <button class="btn-primary btn-full" onclick="addToCartFromDetail('${productId}', '${product.name}', ${hasDiscount ? Math.round(discountedPrice) : product.price}, '${product.image}', ${product.stock})" ${product.stock === 0 ? 'disabled' : ''}>
+                <button class="btn-primary btn-full" id="addToCartBtn"
+                        data-id="${productId}" 
+                        data-name="${product.name}" 
+                        data-price="${hasDiscount ? Math.round(discountedPrice) : product.price}" 
+                        data-image="${product.image}" 
+                        data-stock="${product.stock}" 
+                        data-original-price="${product.price}" 
+                        data-discount="${discount}"
+                        ${product.stock === 0 ? 'disabled' : ''}>
                     ${product.stock > 0 ? 'Ajouter au panier' : 'Produit indisponible'}
                 </button>
                 
@@ -68,6 +76,21 @@ function displayProduct(product) {
             </div>
         </div>
     `;
+    
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    if (addToCartBtn && !addToCartBtn.disabled) {
+        addToCartBtn.addEventListener('click', function() {
+            addToCartFromDetail(
+                this.dataset.id,
+                this.dataset.name,
+                parseFloat(this.dataset.price),
+                this.dataset.image,
+                parseInt(this.dataset.stock),
+                parseFloat(this.dataset.originalPrice),
+                parseFloat(this.dataset.discount)
+            );
+        });
+    }
 }
 
 window.increaseQuantity = function(max) {
@@ -84,7 +107,7 @@ window.decreaseQuantity = function() {
     }
 };
 
-window.addToCartFromDetail = function(id, name, price, image, stock) {
+window.addToCartFromDetail = function(id, name, price, image, stock, originalPrice = null, discount = 0) {
     if (stock === 0) return;
 
     const quantity = parseInt(document.getElementById('quantity').value);
@@ -100,7 +123,16 @@ window.addToCartFromDetail = function(id, name, price, image, stock) {
             return;
         }
     } else {
-        cart.push({ id, name, price, image, quantity, stock });
+        cart.push({ 
+            id, 
+            name, 
+            price, 
+            originalPrice: originalPrice || price,
+            discount,
+            image, 
+            quantity, 
+            stock 
+        });
     }
 
     localStorage.setItem('cart', JSON.stringify(cart));

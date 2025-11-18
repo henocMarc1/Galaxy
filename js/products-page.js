@@ -143,12 +143,34 @@ function displayProducts() {
                     </p>
                 </div>
             </a>
-            <button class="add-to-cart-btn" onclick="addToCart('${product.id}', '${product.name}', ${hasDiscount ? Math.round(discountedPrice) : product.price}, '${product.image}', ${product.stock})" ${product.stock === 0 ? 'disabled' : ''}>
+            <button class="add-to-cart-btn" 
+                    data-id="${product.id}" 
+                    data-name="${product.name}" 
+                    data-price="${hasDiscount ? Math.round(discountedPrice) : product.price}" 
+                    data-image="${product.image}" 
+                    data-stock="${product.stock}" 
+                    data-original-price="${product.price}" 
+                    data-discount="${discount}"
+                    ${product.stock === 0 ? 'disabled' : ''}>
                 ${product.stock > 0 ? 'Ajouter au panier' : 'Indisponible'}
             </button>
         </div>
         `;
     }).join('');
+    
+    productsGrid.querySelectorAll('.add-to-cart-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', function() {
+            addToCart(
+                this.dataset.id,
+                this.dataset.name,
+                parseFloat(this.dataset.price),
+                this.dataset.image,
+                parseInt(this.dataset.stock),
+                parseFloat(this.dataset.originalPrice),
+                parseFloat(this.dataset.discount)
+            );
+        });
+    });
 }
 
 categoryFilters.forEach(filter => filter.addEventListener('change', applyFilters));
@@ -162,7 +184,7 @@ clearFilters.addEventListener('click', () => {
     applyFilters();
 });
 
-window.addToCart = function(id, name, price, image, stock) {
+window.addToCart = function(id, name, price, image, stock, originalPrice = null, discount = 0) {
     if (stock === 0) return;
 
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -176,7 +198,16 @@ window.addToCart = function(id, name, price, image, stock) {
             return;
         }
     } else {
-        cart.push({ id, name, price, image, quantity: 1, stock });
+        cart.push({ 
+            id, 
+            name, 
+            price, 
+            originalPrice: originalPrice || price,
+            discount,
+            image, 
+            quantity: 1, 
+            stock 
+        });
     }
 
     localStorage.setItem('cart', JSON.stringify(cart));

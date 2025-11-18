@@ -46,16 +46,45 @@ function loadOrderSummary() {
     }
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const originalTotal = cart.reduce((sum, item) => sum + ((item.originalPrice || item.price) * item.quantity), 0);
+    const totalSavings = originalTotal - subtotal;
+    const hasDiscounts = totalSavings > 0;
 
     orderSummary.innerHTML = `
-        ${cart.map(item => `
+        ${cart.map(item => {
+            const itemDiscount = item.discount || 0;
+            const itemOriginalPrice = item.originalPrice || item.price;
+            const hasItemDiscount = itemDiscount > 0;
+            
+            return `
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border-color);">
-                <span>${item.name} x ${item.quantity}</span>
-                <span>${(item.price * item.quantity).toLocaleString()} FCFA</span>
+                <div>
+                    <div>${item.name} x ${item.quantity}</div>
+                    ${hasItemDiscount ? `
+                        <div style="font-size: 0.8rem; color: #10B981; font-weight: 600;">-${itemDiscount}% de réduction</div>
+                    ` : ''}
+                </div>
+                <div style="text-align: right;">
+                    ${hasItemDiscount ? `
+                        <div style="text-decoration: line-through; color: #94A3B8; font-size: 0.85rem;">${(itemOriginalPrice * item.quantity).toLocaleString()} FCFA</div>
+                    ` : ''}
+                    <div>${(item.price * item.quantity).toLocaleString()} FCFA</div>
+                </div>
             </div>
-        `).join('')}
+            `;
+        }).join('')}
+        ${hasDiscounts ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border-color);">
+                <span style="color: #94A3B8;">Montant original:</span>
+                <span style="text-decoration: line-through; color: #94A3B8;">${originalTotal.toLocaleString()} FCFA</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border-color); color: #10B981; font-weight: 600;">
+                <span>🎉 Économies totales:</span>
+                <span>-${totalSavings.toLocaleString()} FCFA</span>
+            </div>
+        ` : ''}
         <div class="summary-row summary-total" style="margin-top: 1rem;">
-            <span>Total:</span>
+            <span>Total à payer:</span>
             <span>${subtotal.toLocaleString()} FCFA</span>
         </div>
     `;
