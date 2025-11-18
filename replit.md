@@ -21,9 +21,18 @@ Sans ces étapes, vous verrez une erreur "Permission denied" et l'application ne
 
 ## 🚀 Statut du projet
 
-✅ **Application fonctionnelle et prête à déployer** (après configuration Firebase)
+✅ **Application fonctionnelle et déployée sur Replit**
 
 Date de création: 18 novembre 2024
+Date de déploiement Replit: 18 novembre 2025
+
+## 🔧 Configuration Replit
+
+L'application est configurée pour fonctionner sur Replit avec :
+- **Serveur**: Python HTTP Server sur port 5000
+- **Workflow**: Serveur web automatiquement démarré
+- **Déploiement**: Configuré pour déploiement statique
+- **Firebase**: Configuré et opérationnel
 
 ## 🎨 Technologies utilisées
 
