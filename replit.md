@@ -29,10 +29,14 @@ Date de déploiement Replit: 18 novembre 2025
 ## 🔧 Configuration Replit
 
 L'application est configurée pour fonctionner sur Replit avec :
-- **Serveur**: Python HTTP Server sur port 5000
-- **Workflow**: Serveur web automatiquement démarré
-- **Déploiement**: Configuré pour déploiement statique
+- **Serveur**: Python HTTP Server sur port 5000 (0.0.0.0)
+- **Workflow**: "Web Server" - Serveur web automatiquement démarré
+- **Déploiement**: Configuré pour déploiement statique (public_dir: ".")
 - **Firebase**: Configuré et opérationnel
+- **Python**: Version 3.11 installée pour le serveur HTTP
+
+### Démarrage automatique
+Le serveur se lance automatiquement au démarrage du Repl. L'application est accessible immédiatement via le panneau Webview.
 
 ## 🎨 Technologies utilisées
 
