@@ -25,7 +25,7 @@ Sans ces étapes, vous verrez une erreur "Permission denied" et l'application ne
 
 Date de création: 18 novembre 2024
 Date de déploiement Replit: 18 novembre 2025
-Dernière mise à jour: 18 novembre 2025 - Design bleu raffiné avec hero dynamique et gestion des rabais
+Dernière mise à jour: 22 novembre 2025 - Upload d'images, sidebar admin, vue détaillée membres, images hero arrondies
 
 ## 🔧 Configuration Replit
 
@@ -100,11 +100,14 @@ Le serveur se lance automatiquement au démarrage du Repl. L'application est acc
 - ✅ **Persistance des rabais** - Les informations de rabais sont conservées dans le panier via localStorage
 
 ### Dashboard Admin
+- ✅ **Navigation Sidebar** - Interface moderne avec navigation latérale fixe
 - ✅ **Gestion produits** - CRUD complet (Créer, Lire, Modifier, Supprimer)
+- ✅ **Upload d'images** - Upload direct depuis téléphone/ordinateur vers Firebase Storage
 - ✅ **Gestion stocks** - Mise à jour des stocks et prix
-- ✅ **Gestion images** - URLs d'images produits
+- ✅ **Gestion images** - URLs d'images produits ou upload de fichiers
 - ✅ **Gestion commandes** - Liste, modification statuts (En attente, Confirmée, Livrée, Annulée)
 - ✅ **Liste membres** - Visualisation tous les utilisateurs inscrits
+- ✅ **Vue détaillée membre** - Profil complet avec statistiques et historique des commandes
 
 ### Catégories de produits
 1. ⭐ **Parfums** (catégorie prioritaire)
@@ -153,7 +156,7 @@ Accédez à **init.html** et cliquez sur "Initialiser les données" pour ajouter
 
 **Caractéristiques design:**
 - Style moderne et minimaliste avec palette bleue raffinée
-- Hero section avec rotation automatique des produits
+- Hero section avec rotation automatique des produits et images arrondies (border-radius: 20px)
 - Boutons arrondis (pill-shaped)
 - Cartes produits avec ombres douces et coins arrondis
 - Responsive Mobile First
@@ -161,6 +164,7 @@ Accédez à **init.html** et cliquez sur "Initialiser les données" pour ajouter
 - Section catégories disponible uniquement dans le menu dropdown
 - Animations et effets de survol modernes
 - Badges de rabais animés avec effet pulse
+- Dashboard admin avec sidebar fixe et design professionnel
 
 ## 💾 Données LocalStorage
 
