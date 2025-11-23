@@ -102,12 +102,17 @@ Le serveur se lance automatiquement au démarrage du Repl. L'application est acc
 ### Dashboard Admin
 - ✅ **Navigation Sidebar** - Interface moderne avec navigation latérale fixe
 - ✅ **Gestion produits** - CRUD complet (Créer, Lire, Modifier, Supprimer)
-- ✅ **Upload d'images** - Upload direct depuis téléphone/ordinateur vers Firebase Storage
-- ✅ **Gestion stocks** - Mise à jour des stocks et prix
-- ✅ **Gestion images** - URLs d'images produits ou upload de fichiers
-- ✅ **Gestion commandes** - Liste, modification statuts (En attente, Confirmée, Livrée, Annulée)
-- ✅ **Liste membres** - Visualisation tous les utilisateurs inscrits
-- ✅ **Vue détaillée membre** - Profil complet avec statistiques et historique des commandes
+- ✅ **Upload d'images Cloudinary** - Widget Cloudinary intégré pour upload d'images professionnelles (cloudName: dv3ulmei1)
+- ✅ **Calcul automatique rabais** - Aperçu en temps réel du prix réduit lors de l'ajout/modification de produits
+- ✅ **Gestion stocks** - Mise à jour des stocks et prix avec validation
+- ✅ **Menu actions 3 points** - Interface épurée avec dropdown pour modifier/supprimer les produits
+- ✅ **Tri et filtres tableaux** - Tri par colonne (nom, catégorie, prix, rabais, stock) et filtres dynamiques
+- ✅ **Gestion commandes avancée** - Liste avec montants totaux dans les cartes de statistiques
+- ✅ **Filtres de dates** - Sélection de plage de dates (Du/Au) pour filtrer les commandes par période
+- ✅ **Détails commandes** - Modal détaillée avec liste des articles achetés et informations client complètes
+- ✅ **Navigation clients cliquable** - Cliquer sur le nom du client dans les commandes pour voir son profil détaillé
+- ✅ **Liste membres** - Visualisation de tous les utilisateurs inscrits avec statistiques
+- ✅ **Vue détaillée membre** - Profil complet avec icônes SVG colorées, statistiques et historique des commandes
 
 ### Catégories de produits
 1. ⭐ **Parfums** (catégorie prioritaire)
