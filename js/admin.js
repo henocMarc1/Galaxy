@@ -11,14 +11,20 @@ const membersTable = document.getElementById('membersTable');
 const addProductBtn = document.getElementById('addProductBtn');
 const productModal = document.getElementById('productModal');
 const productForm = document.getElementById('productForm');
-const closeModal = document.querySelector('.close');
+const closeProductModal = productModal ? productModal.querySelector('.close') : null;
 const productImageFile = document.getElementById('productImageFile');
 const imagePreview = document.getElementById('imagePreview');
 const uploadProgress = document.getElementById('uploadProgress');
+const uploadCloudinaryBtn = document.getElementById('uploadCloudinaryBtn');
+const productPriceInput = document.getElementById('productPrice');
+const productDiscountInput = document.getElementById('productDiscount');
+const discountedPriceDisplay = document.getElementById('discountedPriceDisplay');
+const discountedPriceValue = document.getElementById('discountedPriceValue');
 
 let currentUser = null;
 let isAdmin = false;
 let uploadedImageUrl = null;
+let cloudinaryWidget = null;
 
 function formatCurrency(amount) {
     if (!amount && amount !== 0) return '0 FCFA';
@@ -50,11 +56,65 @@ onAuthStateChanged(auth, async (user) => {
             loadProducts();
             loadOrders();
             loadMembers();
+            initCloudinaryWidget();
+            setupDiscountCalculator();
         }
     } else {
         window.location.href = 'auth.html';
     }
 });
+
+function initCloudinaryWidget() {
+    if (typeof cloudinary !== 'undefined') {
+        cloudinaryWidget = cloudinary.createUploadWidget(
+            {
+                cloudName: "dv3ulmei1",
+                uploadPreset: "product_upload"
+            },
+            (error, result) => {
+                if (!error && result && result.event === "success") {
+                    console.log("Image uploadée :", result.info.secure_url);
+                    document.getElementById('productImage').value = result.info.secure_url;
+                    imagePreview.innerHTML = `<img src="${result.info.secure_url}" alt="Preview">`;
+                    uploadedImageUrl = result.info.secure_url;
+                    productImageFile.value = '';
+                }
+            }
+        );
+    }
+}
+
+if (uploadCloudinaryBtn) {
+    uploadCloudinaryBtn.addEventListener('click', function() {
+        if (cloudinaryWidget) {
+            cloudinaryWidget.open();
+        } else {
+            alert('Widget Cloudinary non disponible. Veuillez vérifier la connexion.');
+        }
+    });
+}
+
+function setupDiscountCalculator() {
+    if (!productPriceInput || !productDiscountInput || !discountedPriceDisplay || !discountedPriceValue) {
+        return;
+    }
+    
+    function calculateDiscountedPrice() {
+        const price = parseFloat(productPriceInput.value) || 0;
+        const discount = parseFloat(productDiscountInput.value) || 0;
+        
+        if (price > 0 && discount > 0) {
+            const discountedPrice = price - (price * discount / 100);
+            discountedPriceValue.textContent = formatCurrency(discountedPrice);
+            discountedPriceDisplay.style.display = 'block';
+        } else {
+            discountedPriceDisplay.style.display = 'none';
+        }
+    }
+    
+    productPriceInput.addEventListener('input', calculateDiscountedPrice);
+    productDiscountInput.addEventListener('input', calculateDiscountedPrice);
+}
 
 async function checkAdminAccess() {
     try {
@@ -128,36 +188,58 @@ async function loadProducts() {
             });
 
             productsTable.innerHTML = `
-                <table class="data-table">
+                <div class="table-controls">
+                    <input type="text" id="productSearchInput" placeholder="Rechercher un produit..." class="search-input">
+                    <select id="productCategoryFilter" class="filter-select">
+                        <option value="all">Toutes les catégories</option>
+                        <option value="Parfums">Parfums</option>
+                        <option value="Épicerie">Épicerie</option>
+                        <option value="Boissons">Boissons</option>
+                        <option value="Hygiène & Beauté">Hygiène & Beauté</option>
+                        <option value="Produits ménagers">Produits ménagers</option>
+                        <option value="Fruits & Légumes">Fruits & Légumes</option>
+                        <option value="Snacks">Snacks</option>
+                        <option value="Surgelés">Surgelés</option>
+                        <option value="Bébé & Maman">Bébé & Maman</option>
+                    </select>
+                </div>
+                <table class="data-table sortable-table" id="productsDataTable">
                     <thead>
                         <tr>
                             <th>Image</th>
-                            <th>Nom</th>
-                            <th>Catégorie</th>
-                            <th>Prix</th>
-                            <th>Rabais</th>
-                            <th>Stock</th>
+                            <th class="sortable" onclick="sortTable(1, 'productsDataTable')">Nom ↕</th>
+                            <th class="sortable" onclick="sortTable(2, 'productsDataTable')">Catégorie ↕</th>
+                            <th class="sortable" onclick="sortTable(3, 'productsDataTable')">Prix ↕</th>
+                            <th class="sortable" onclick="sortTable(4, 'productsDataTable')">Rabais ↕</th>
+                            <th class="sortable" onclick="sortTable(5, 'productsDataTable')">Stock ↕</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${products.map(product => `
-                            <tr>
+                            <tr data-name="${product.name.toLowerCase()}" data-category="${product.category}">
                                 <td><img src="${product.image}" alt="${product.name}"></td>
                                 <td>${product.name}</td>
                                 <td>${product.category}</td>
-                                <td>${formatCurrency(product.price)}</td>
-                                <td>${product.discount || 0}%</td>
-                                <td>${product.stock}</td>
+                                <td data-value="${product.price}">${formatCurrency(product.price)}</td>
+                                <td data-value="${product.discount || 0}">${product.discount || 0}%</td>
+                                <td data-value="${product.stock}">${product.stock}</td>
                                 <td>
-                                    <button class="action-btn edit-btn" onclick="editProduct('${product.id}')">Modifier</button>
-                                    <button class="action-btn delete-btn" onclick="deleteProduct('${product.id}')">Supprimer</button>
+                                    <div class="dropdown-wrapper">
+                                        <button class="three-dot-menu" onclick="toggleProductMenu('${product.id}')">⋮</button>
+                                        <div class="dropdown-menu-actions" id="menu-${product.id}">
+                                            <button onclick="editProduct('${product.id}')">✏️ Modifier</button>
+                                            <button onclick="deleteProduct('${product.id}')" style="color: #EF4444;">🗑️ Supprimer</button>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             `;
+            
+            setupProductFilters();
         } else {
             productsTable.innerHTML = '<p>Aucun produit dans la base de données.</p>';
         }
@@ -190,10 +272,20 @@ async function loadOrders() {
 
             allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-            const pendingCount = allOrders.filter(o => o.status === 'pending').length;
-            const confirmedCount = allOrders.filter(o => o.status === 'confirmed').length;
-            const deliveredCount = allOrders.filter(o => o.status === 'delivered').length;
-            const cancelledCount = allOrders.filter(o => o.status === 'cancelled').length;
+            const pendingOrders = allOrders.filter(o => o.status === 'pending');
+            const confirmedOrders = allOrders.filter(o => o.status === 'confirmed');
+            const deliveredOrders = allOrders.filter(o => o.status === 'delivered');
+            const cancelledOrders = allOrders.filter(o => o.status === 'cancelled');
+            
+            const pendingCount = pendingOrders.length;
+            const confirmedCount = confirmedOrders.length;
+            const deliveredCount = deliveredOrders.length;
+            const cancelledCount = cancelledOrders.length;
+            
+            const pendingTotal = pendingOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+            const confirmedTotal = confirmedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+            const deliveredTotal = deliveredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+            const cancelledTotal = cancelledOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
             ordersTable.innerHTML = `
                 <div class="orders-stats">
@@ -207,6 +299,7 @@ async function loadOrders() {
                         <div class="stat-details">
                             <div class="stat-label">En attente</div>
                             <div class="stat-value">${pendingCount}</div>
+                            <div class="stat-sublabel">${formatCurrency(pendingTotal)}</div>
                         </div>
                     </div>
                     <div class="stat-card-small">
@@ -219,6 +312,7 @@ async function loadOrders() {
                         <div class="stat-details">
                             <div class="stat-label">Confirmées</div>
                             <div class="stat-value">${confirmedCount}</div>
+                            <div class="stat-sublabel">${formatCurrency(confirmedTotal)}</div>
                         </div>
                     </div>
                     <div class="stat-card-small">
@@ -231,6 +325,7 @@ async function loadOrders() {
                         <div class="stat-details">
                             <div class="stat-label">Livrées</div>
                             <div class="stat-value">${deliveredCount}</div>
+                            <div class="stat-sublabel">${formatCurrency(deliveredTotal)}</div>
                         </div>
                     </div>
                     <div class="stat-card-small">
@@ -244,6 +339,7 @@ async function loadOrders() {
                         <div class="stat-details">
                             <div class="stat-label">Annulées</div>
                             <div class="stat-value">${cancelledCount}</div>
+                            <div class="stat-sublabel">${formatCurrency(cancelledTotal)}</div>
                         </div>
                     </div>
                 </div>
@@ -263,25 +359,24 @@ async function loadOrders() {
                         <option value="delivered">Livrées</option>
                         <option value="cancelled">Annulées</option>
                     </select>
-                    <select id="dateFilter" class="filter-select">
-                        <option value="all">Toutes les dates</option>
-                        <option value="today">Aujourd'hui</option>
-                        <option value="week">Cette semaine</option>
-                        <option value="month">Ce mois</option>
-                    </select>
+                    <div class="date-range-filter">
+                        <label style="font-size: 0.85rem; color: #6B7280;">Du:</label>
+                        <input type="date" id="dateFilterStart" class="filter-select" style="width: auto;">
+                        <label style="font-size: 0.85rem; color: #6B7280;">Au:</label>
+                        <input type="date" id="dateFilterEnd" class="filter-select" style="width: auto;">
+                    </div>
                 </div>
 
                 <div class="orders-table-wrapper">
-                    <table class="modern-table" id="ordersDataTable">
+                    <table class="modern-table sortable-table" id="ordersDataTable">
                         <thead>
                             <tr>
-                                <th>N° Commande</th>
-                                <th>Date création</th>
-                                <th>Nom du client</th>
-                                <th>Priorité</th>
-                                <th>Montant total</th>
+                                <th class="sortable" onclick="sortTable(0, 'ordersDataTable')">N° Commande ↕</th>
+                                <th class="sortable" onclick="sortTable(1, 'ordersDataTable')">Date ↕</th>
+                                <th class="sortable" onclick="sortTable(2, 'ordersDataTable')">Client ↕</th>
+                                <th>Article</th>
+                                <th class="sortable" onclick="sortTable(4, 'ordersDataTable')">Montant ↕</th>
                                 <th>Paiement</th>
-                                <th>Articles</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
                             </tr>
@@ -295,7 +390,8 @@ async function loadOrders() {
 
             document.getElementById('orderSearch').addEventListener('input', filterOrders);
             document.getElementById('statusFilter').addEventListener('change', filterOrders);
-            document.getElementById('dateFilter').addEventListener('change', filterOrders);
+            document.getElementById('dateFilterStart').addEventListener('change', filterOrders);
+            document.getElementById('dateFilterEnd').addEventListener('change', filterOrders);
 
         } else {
             ordersTable.innerHTML = '<p>Aucune commande.</p>';
@@ -316,7 +412,7 @@ async function loadOrders() {
 
 function renderOrderRows(orders) {
     if (orders.length === 0) {
-        return '<tr><td colspan="9" style="text-align: center; padding: 2rem;">Aucune commande trouvée</td></tr>';
+        return '<tr><td colspan="8" style="text-align: center; padding: 2rem;">Aucune commande trouvée</td></tr>';
     }
 
     return orders.map(order => {
@@ -331,44 +427,57 @@ function renderOrderRows(orders) {
         
         let itemsCount = 0;
         let firstProduct = 'N/A';
+        let firstProductQty = 0;
         
         if (order.items && Array.isArray(order.items)) {
             itemsCount = order.items.length;
             if (order.items.length > 0) {
                 firstProduct = order.items[0].name || order.items[0].productName || 'N/A';
+                firstProductQty = order.items[0].quantity || 1;
             }
         } else if (order.items && typeof order.items === 'object') {
             const itemsArray = Object.values(order.items);
             itemsCount = itemsArray.length;
             if (itemsArray.length > 0) {
                 firstProduct = itemsArray[0].name || itemsArray[0].productName || 'N/A';
+                firstProductQty = itemsArray[0].quantity || 1;
             }
         }
+        
+        const articleDisplay = itemsCount > 1 
+            ? `${firstProduct.substring(0, 25)}... +${itemsCount - 1}` 
+            : `${firstProduct} (x${firstProductQty})`;
         
         return `
             <tr data-order-id="${order.id}" data-customer="${(order.fullName || '').toLowerCase()}" data-status="${order.status}" data-date="${order.createdAt}" data-product="${firstProduct.toLowerCase()}">
                 <td><strong>#${order.id.substring(0, 8)}</strong></td>
-                <td>${new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                <td data-value="${new Date(order.createdAt).getTime()}">${new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                 <td>
-                    <div>${order.fullName || 'N/A'}</div>
+                    <div style="cursor: pointer; color: #3B82F6; text-decoration: underline;" onclick="viewMemberDetailFromOrder('${order.userId}')">
+                        ${order.fullName || 'N/A'}
+                    </div>
                     <small style="color: #6B7280;">${order.email || ''}</small>
                 </td>
-                <td><span class="priority-badge">Normal</span></td>
-                <td><strong>${formatCurrency(order.total || 0)}</strong></td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${firstProduct}">${articleDisplay}</td>
+                <td data-value="${order.total || 0}"><strong>${formatCurrency(order.total || 0)}</strong></td>
                 <td><span class="payment-badge">${order.paymentMethod || 'N/A'}</span></td>
-                <td>${itemsCount} article${itemsCount > 1 ? 's' : ''}</td>
                 <td>
                     <span class="status-badge" style="background: ${statusInfo.bg}; color: ${statusInfo.text};">
                         ${statusInfo.label}
                     </span>
                 </td>
                 <td>
-                    <select onchange="updateOrderStatus('${order.id}', this.value)" class="status-select">
-                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>En attente</option>
-                        <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmée</option>
-                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Livrée</option>
-                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Annulée</option>
-                    </select>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button onclick="showOrderDetails('${order.id}')" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                            📋 Détails
+                        </button>
+                        <select onchange="updateOrderStatus('${order.id}', this.value)" class="status-select" style="padding: 0.4rem; font-size: 0.85rem;">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>En attente</option>
+                            <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmée</option>
+                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Livrée</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Annulée</option>
+                        </select>
+                    </div>
                 </td>
             </tr>
         `;
@@ -378,7 +487,8 @@ function renderOrderRows(orders) {
 function filterOrders() {
     const searchTerm = document.getElementById('orderSearch').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
-    const dateFilter = document.getElementById('dateFilter').value;
+    const dateFilterStart = document.getElementById('dateFilterStart').value;
+    const dateFilterEnd = document.getElementById('dateFilterEnd').value;
     
     const filteredOrders = allOrders.filter(order => {
         let matchesSearch = false;
@@ -403,17 +513,20 @@ function filterOrders() {
         const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
         
         let matchesDate = true;
-        if (dateFilter !== 'all' && order.createdAt) {
+        if (order.createdAt) {
             const orderDate = new Date(order.createdAt);
-            const now = new Date();
+            orderDate.setHours(0, 0, 0, 0);
             
-            if (dateFilter === 'today') {
-                matchesDate = orderDate.toDateString() === now.toDateString();
-            } else if (dateFilter === 'week') {
-                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                matchesDate = orderDate >= weekAgo;
-            } else if (dateFilter === 'month') {
-                matchesDate = orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+            if (dateFilterStart) {
+                const startDate = new Date(dateFilterStart);
+                startDate.setHours(0, 0, 0, 0);
+                matchesDate = matchesDate && orderDate >= startDate;
+            }
+            
+            if (dateFilterEnd) {
+                const endDate = new Date(dateFilterEnd);
+                endDate.setHours(23, 59, 59, 999);
+                matchesDate = matchesDate && orderDate <= endDate;
             }
         }
         
@@ -533,21 +646,46 @@ window.viewMemberDetail = async function(userId) {
                 
                 <div class="member-stats">
                     <div class="stat-card">
+                        <div class="stat-icon-wrapper">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </div>
                         <div class="stat-label">Coût Total</div>
                         <div class="stat-value">${formatCurrency(totalCost)}</div>
                         <div class="stat-sublabel">Total des commandes des 365 derniers jours</div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-icon-wrapper">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                            </svg>
+                        </div>
                         <div class="stat-label">Total Commandes</div>
                         <div class="stat-value">${totalOrders}</div>
                         <div class="stat-sublabel">Total des commandes des 365 derniers jours</div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-icon-wrapper">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
                         <div class="stat-label">Livrées</div>
                         <div class="stat-value">${completedOrders}</div>
                         <div class="stat-sublabel">Commandes livrées des 365 derniers jours</div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-icon-wrapper">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                        </div>
                         <div class="stat-label">Annulées</div>
                         <div class="stat-value">${canceledOrders}</div>
                         <div class="stat-sublabel">Commandes annulées des 365 derniers jours</div>
@@ -680,8 +818,26 @@ addProductBtn.addEventListener('click', () => {
     productModal.classList.add('show');
 });
 
-closeModal.addEventListener('click', () => {
-    productModal.classList.remove('show');
+if (closeProductModal) {
+    closeProductModal.addEventListener('click', () => {
+        productModal.classList.remove('show');
+    });
+}
+
+productModal.addEventListener('click', (e) => {
+    if (e.target === productModal) {
+        productModal.classList.remove('show');
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        productModal.classList.remove('show');
+        const orderModal = document.getElementById('orderDetailModal');
+        if (orderModal) {
+            orderModal.style.display = 'none';
+        }
+    }
 });
 
 async function uploadImage(file) {
@@ -862,35 +1018,180 @@ window.updateOrderStatus = async function(orderId, newStatus) {
     }
 };
 
-window.viewOrderDetails = async function(orderId) {
+window.showOrderDetails = async function(orderId) {
     try {
         const orderRef = ref(database, `orders/${orderId}`);
         const snapshot = await get(orderRef);
         
         if (snapshot.exists()) {
             const order = snapshot.val();
-            const details = `
-Commande #${orderId.substring(0, 8)}
-Date: ${new Date(order.createdAt).toLocaleString('fr-FR')}
-
-Client: ${order.fullName}
-Email: ${order.email}
-Téléphone: ${order.phone}
-
-Adresse: ${order.address}, ${order.city}
-Paiement: ${order.paymentMethod}
-
-Articles:
-${order.items.map(item => `- ${item.name} x ${item.quantity} = ${(item.price * item.quantity).toLocaleString()} FCFA`).join('\n')}
-
-Total: ${order.total.toLocaleString()} FCFA
-Statut: ${order.status}
-
-Notes: ${order.notes || 'Aucune'}
+            
+            const statusLabels = {
+                'pending': 'En attente',
+                'confirmed': 'Confirmée',
+                'delivered': 'Livrée',
+                'cancelled': 'Annulée'
+            };
+            
+            let itemsHTML = '';
+            if (order.items && order.items.length > 0) {
+                itemsHTML = order.items.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${formatCurrency(item.price)}</td>
+                        <td><strong>${formatCurrency(item.price * item.quantity)}</strong></td>
+                    </tr>
+                `).join('');
+            }
+            
+            const detailContent = `
+                <div class="order-detail-wrapper">
+                    <div class="order-detail-header">
+                        <h3>Commande #${orderId.substring(0, 8)}</h3>
+                        <p style="color: #6B7280; font-size: 0.9rem;">Créée le ${new Date(order.createdAt).toLocaleString('fr-FR')}</p>
+                    </div>
+                    
+                    <div class="order-detail-sections">
+                        <div class="order-section">
+                            <h4>📋 Informations client</h4>
+                            <div class="info-grid">
+                                <div><strong>Nom:</strong> ${order.fullName}</div>
+                                <div><strong>Email:</strong> ${order.email}</div>
+                                <div><strong>Téléphone:</strong> ${order.phone}</div>
+                                <div><strong>Adresse:</strong> ${order.address}, ${order.city}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="order-section">
+                            <h4>🛍️ Articles commandés</h4>
+                            <table class="data-table" style="margin-top: 1rem;">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Produit</th>
+                                        <th>Quantité</th>
+                                        <th>Prix unitaire</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="order-section">
+                            <h4>💰 Résumé</h4>
+                            <div class="info-grid">
+                                <div><strong>Méthode de paiement:</strong> ${order.paymentMethod}</div>
+                                <div><strong>Statut:</strong> ${statusLabels[order.status] || order.status}</div>
+                                <div><strong>Total:</strong> <span style="color: #10B981; font-size: 1.2rem; font-weight: 600;">${formatCurrency(order.total)}</span></div>
+                                ${order.notes ? `<div><strong>Notes:</strong> ${order.notes}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
-            alert(details);
+            
+            document.getElementById('orderDetailContent').innerHTML = detailContent;
+            document.getElementById('orderDetailModal').classList.add('show');
         }
     } catch (error) {
         console.error('Erreur lors du chargement des détails de la commande:', error);
+        alert('Erreur lors du chargement des détails de la commande.');
+    }
+};
+
+window.closeOrderDetailModal = function() {
+    document.getElementById('orderDetailModal').classList.remove('show');
+};
+
+window.toggleProductMenu = function(productId) {
+    const menu = document.getElementById(`menu-${productId}`);
+    const allMenus = document.querySelectorAll('.dropdown-menu-actions');
+    
+    allMenus.forEach(m => {
+        if (m.id !== `menu-${productId}`) {
+            m.classList.remove('show');
+        }
+    });
+    
+    menu.classList.toggle('show');
+};
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown-wrapper')) {
+        const allMenus = document.querySelectorAll('.dropdown-menu-actions');
+        allMenus.forEach(m => m.classList.remove('show'));
+    }
+});
+
+window.sortTable = function(columnIndex, tableId) {
+    const table = document.getElementById(tableId);
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    const isNumeric = rows.length > 0 && rows[0].children[columnIndex].dataset.value !== undefined;
+    
+    rows.sort((a, b) => {
+        let aValue, bValue;
+        
+        if (isNumeric) {
+            aValue = parseFloat(a.children[columnIndex].dataset.value) || 0;
+            bValue = parseFloat(b.children[columnIndex].dataset.value) || 0;
+        } else {
+            aValue = a.children[columnIndex].textContent.trim().toLowerCase();
+            bValue = b.children[columnIndex].textContent.trim().toLowerCase();
+        }
+        
+        if (aValue < bValue) return -1;
+        if (aValue > bValue) return 1;
+        return 0;
+    });
+    
+    if (tbody.dataset.lastSortColumn === String(columnIndex)) {
+        rows.reverse();
+        tbody.dataset.lastSortColumn = '';
+    } else {
+        tbody.dataset.lastSortColumn = columnIndex;
+    }
+    
+    rows.forEach(row => tbody.appendChild(row));
+};
+
+function setupProductFilters() {
+    const searchInput = document.getElementById('productSearchInput');
+    const categoryFilter = document.getElementById('productCategoryFilter');
+    
+    if (searchInput && categoryFilter) {
+        const filterProducts = () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCategory = categoryFilter.value;
+            
+            const rows = document.querySelectorAll('#productsDataTable tbody tr');
+            
+            rows.forEach(row => {
+                const name = row.dataset.name || '';
+                const category = row.dataset.category || '';
+                
+                const matchesSearch = name.includes(searchTerm);
+                const matchesCategory = selectedCategory === 'all' || category === selectedCategory;
+                
+                row.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
+            });
+        };
+        
+        searchInput.addEventListener('input', filterProducts);
+        categoryFilter.addEventListener('change', filterProducts);
+    }
+}
+
+window.viewMemberDetailFromOrder = async function(userId) {
+    if (userId) {
+        await viewMemberDetail(userId);
+    } else {
+        alert('Aucun utilisateur associé à cette commande.');
     }
 };
