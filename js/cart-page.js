@@ -1,9 +1,47 @@
-const cartContent = document.getElementById('cartContent');
+import { auth, database } from './firebase-config.js';
+import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-function loadCart() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+const cartContent = document.getElementById('cartContent');
+let currentUser = null;
+
+onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (user) {
+        loadCartFromFirebase();
+    } else {
+        window.location.href = 'auth.html';
+    }
+});
+
+async function loadCartFromFirebase() {
+    try {
+        if (!currentUser) return;
+        const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+        const snapshot = await get(cartRef);
+        const cartData = snapshot.exists() ? snapshot.val() : {};
+        
+        const cart = Object.values(cartData).map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            quantity: item.quantity,
+            discount: item.discount || 0,
+            originalPrice: item.price / (1 - (item.discount || 0) / 100),
+            stock: 999
+        }));
+        
+        displayCart(cart);
+        window.updateCartCount();
+    } catch (error) {
+        console.error('Erreur chargement panier:', error);
+    }
+}
+
+function displayCart(cart) {
     
-    if (cart.length === 0) {
+    if (!cart || cart.length === 0) {
         cartContent.innerHTML = `
             <div class="empty-cart">
                 <h2>Votre panier est vide</h2>
@@ -88,35 +126,69 @@ function loadCart() {
                 </div>
                 <a href="checkout.html" class="btn-primary btn-full">Passer la commande</a>
                 <a href="products.html" class="btn-secondary btn-full" style="margin-top: 1rem;">Continuer mes achats</a>
+                <button onclick="clearAllCart()" class="btn-secondary btn-full" style="margin-top: 0.5rem; background: #EF4444; color: white;">
+                    <span class="material-icons" style="vertical-align: middle;">delete_sweep</span> Vider le panier
+                </button>
             </div>
         </div>
     `;
 }
 
-window.updateQuantity = function(index, change) {
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const newQuantity = cart[index].quantity + change;
-
-    if (newQuantity < 1) return;
-    if (newQuantity > cart[index].stock) {
-        alert('Stock insuffisant');
-        return;
+window.updateQuantity = async function(index, change) {
+    try {
+        if (!currentUser) return;
+        const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+        const snapshot = await get(cartRef);
+        const cartData = snapshot.exists() ? snapshot.val() : {};
+        const items = Object.entries(cartData);
+        
+        if (index < items.length) {
+            const [key, item] = items[index];
+            const newQuantity = item.quantity + change;
+            if (newQuantity < 1) {
+                await remove(ref(database, `users/${currentUser.uid}/cart/${key}`));
+            } else {
+                await set(ref(database, `users/${currentUser.uid}/cart/${key}`), {
+                    ...item,
+                    quantity: newQuantity
+                });
+            }
+            loadCartFromFirebase();
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
     }
-
-    cart[index].quantity = newQuantity;
-    localStorage.setItem('cart', JSON.stringify(cart));
-    window.updateCartCount();
-    loadCart();
 };
 
-window.removeFromCart = function(index) {
-    if (confirm('Voulez-vous vraiment retirer cet article du panier ?')) {
-        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        cart.splice(index, 1);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        window.updateCartCount();
-        loadCart();
+window.removeFromCart = async function(index) {
+    if (!confirm('Voulez-vous vraiment retirer cet article du panier ?')) return;
+    try {
+        if (!currentUser) return;
+        const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+        const snapshot = await get(cartRef);
+        const cartData = snapshot.exists() ? snapshot.val() : {};
+        const items = Object.entries(cartData);
+        
+        if (index < items.length) {
+            const [key] = items[index];
+            await remove(ref(database, `users/${currentUser.uid}/cart/${key}`));
+            loadCartFromFirebase();
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
     }
 };
 
-loadCart();
+window.clearAllCart = async function() {
+    if (!confirm('Êtes-vous sûr de vouloir vider complètement le panier ? Cette action ne peut pas être annulée.')) return;
+    try {
+        if (!currentUser) return;
+        const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+        await remove(cartRef);
+        showToast('Panier vidé avec succès !', 'success');
+        loadCartFromFirebase();
+    } catch (error) {
+        console.error('Erreur vidage panier:', error);
+        showToast('Erreur lors du vidage du panier', 'error');
+    }
+};

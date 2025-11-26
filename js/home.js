@@ -4,13 +4,47 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/fi
 
 let currentUser = null;
 let userFavorites = {};
+let currentCart = {};
+let allProducts = [];
+
+// Fonction globale pour mettre à jour le compteur du panier - compte le nombre de produits différents
+window.updateCartCount = async function() {
+    try {
+        if (!currentUser) {
+            document.querySelectorAll('.cart-count').forEach(el => el.textContent = '0');
+            return;
+        }
+        const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+        const snapshot = await get(cartRef);
+        const cartData = snapshot.exists() ? snapshot.val() : {};
+        const count = Object.keys(cartData).length;
+        document.querySelectorAll('.cart-count').forEach(el => el.textContent = count);
+    } catch (error) {
+        console.error('Erreur mise à jour compteur:', error);
+    }
+};
 
 onAuthStateChanged(auth, (user) => {
     currentUser = user;
     if (user) {
         loadUserFavorites();
+        loadCart();
     }
 });
+
+async function loadCart() {
+    try {
+        if (!currentUser) return;
+        const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+        const snapshot = await get(cartRef);
+        if (snapshot.exists()) {
+            currentCart = snapshot.val();
+            window.updateCartCount();
+        }
+    } catch (error) {
+        console.error('Erreur chargement panier:', error);
+    }
+}
 
 async function loadUserFavorites() {
     if (!currentUser) return;
@@ -142,13 +176,13 @@ async function loadProducts() {
         const snapshot = await get(productsRef);
         
         if (snapshot.exists()) {
-            const products = [];
+            allProducts = [];
             snapshot.forEach((child) => {
-                products.push({ dbId: child.key, ...child.val() });
+                allProducts.push({ dbId: child.key, ...child.val() });
             });
 
-            const promoProducts = products.filter(p => p.discount > 0 && p.stock > 0);
-            const otherProducts = products.filter(p => (!p.discount || p.discount === 0) && p.stock > 0 && (p.featured || p.isNew));
+            const promoProducts = allProducts.filter(p => p.discount > 0 && p.stock > 0);
+            const otherProducts = allProducts.filter(p => (!p.discount || p.discount === 0) && p.stock > 0 && (p.featured || p.isNew));
             
             heroProducts = [...promoProducts, ...otherProducts].slice(0, 6);
             
@@ -157,11 +191,11 @@ async function loadProducts() {
             }
 
             // AFFICHER RAPIDO les produits featured/isNew SANS ATTENDRE les ventes
-            const fastTrendingProducts = products.filter(p => (p.featured || p.isNew) && p.stock > 0).slice(0, 8);
+            const fastTrendingProducts = allProducts.filter(p => (p.featured || p.isNew) && p.stock > 0).slice(0, 8);
             displayProducts('bestSellers', fastTrendingProducts);
 
             // Charger les ventes en arrière-plan (sans bloquer)
-            getTopProductsByActualSales(products).then(trendingProducts => {
+            getTopProductsByActualSales(allProducts).then(trendingProducts => {
                 if (trendingProducts.length > 0) {
                     displayProducts('bestSellers', trendingProducts);
                 }
@@ -226,10 +260,62 @@ function displayProducts(containerId, products) {
                     </div>
                 </div>
             </a>
+            ${currentCart[product.dbId] ? `
+                <div style="width: 100%; padding: 12px; background: #F0F9FF; border: 2px solid #1E40AF; border-radius: 8px; margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                    <button onclick="updateProductQuantityHome('${product.dbId}', -1)" style="background: #EF4444; color: #FFFFFF; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-weight: 600;">-</button>
+                    <span style="font-weight: 600; color: #1E40AF; min-width: 30px; text-align: center;">${currentCart[product.dbId].quantity || 1}</span>
+                    <button onclick="updateProductQuantityHome('${product.dbId}', 1)" style="background: #10B981; color: #FFFFFF; border: none; border-radius: 4px; padding: 6px 10px; cursor: pointer; font-weight: 600;">+</button>
+                </div>
+            ` : `
+                <button class="add-to-cart-btn" data-product-id="${product.dbId}" data-product-name="${product.name}" data-product-price="${Math.round(discountedPrice)}" style="width: 100%; padding: 0.75rem; background: #1E40AF; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 0.75rem; transition: all 0.3s;">
+                    <span class="material-icons" style="font-size: 20px;">shopping_cart</span>
+                    Ajouter au panier
+                </button>
+            `}
         </div>
         `;
     }).join('');
     
+    // Mettre à jour quantité depuis la carte produit
+    window.updateProductQuantityHome = async function(productId, change) {
+        try {
+            if (!currentUser) {
+                showToast('Connectez-vous', 'warning');
+                window.location.href = 'auth.html';
+                return;
+            }
+            const product = allProducts.find(p => p.dbId === productId);
+            if (!product) return;
+
+            const currentQty = (currentCart[productId]?.quantity || 0) + change;
+            
+            const cartRef = ref(database, `users/${currentUser.uid}/cart/${productId}`);
+            
+            if (currentQty < 1) {
+                // Supprimer du panier quand quantité atteint 0
+                await set(cartRef, null);
+                delete currentCart[productId];
+                showToast(`${product.name} retiré du panier`, 'info');
+            } else {
+                // Mettre à jour la quantité
+                await set(cartRef, {
+                    id: productId,
+                    name: product.name,
+                    price: Math.round(product.price * (1 - (product.discount || 0) / 100)),
+                    image: Array.isArray(product.images) ? product.images[0] : product.image,
+                    quantity: currentQty,
+                    discount: product.discount || 0
+                });
+                currentCart[productId] = { quantity: currentQty };
+            }
+
+            window.updateCartCount();
+            displayProducts('bestSellers', allProducts.filter(p => (p.featured || p.isNew) && p.stock > 0));
+        } catch (error) {
+            console.error('Erreur:', error);
+        }
+    };
+
     // Attach favorite button listeners
     container.querySelectorAll('.favorite-btn-card').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -245,6 +331,20 @@ function displayProducts(containerId, products) {
             const productId = btn.dataset.productId;
             const productName = btn.dataset.productName;
             await toggleFavorite(productId, productName, btn);
+        });
+    });
+    
+    // Attach add to cart button listeners
+    container.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const productId = btn.dataset.productId;
+            const productName = btn.dataset.productName;
+            const productPrice = parseInt(btn.dataset.productPrice);
+            
+            await addToCart(productId, productName, productPrice, btn);
         });
     });
 }
@@ -274,6 +374,63 @@ async function toggleFavorite(productId, productName, button) {
     } catch (error) {
         console.error('Erreur:', error);
         showToast('Erreur lors de la mise à jour des favoris', 'error');
+    }
+}
+
+async function addToCart(productId, productName, productPrice, button) {
+    try {
+        if (!currentUser) {
+            showToast('Connectez-vous pour ajouter au panier', 'warning');
+            window.location.href = 'auth.html';
+            return;
+        }
+        
+        // Get current cart from Firebase or local variable
+        const currentQty = (currentCart[productId]?.quantity || 0) + 1;
+        const product = allProducts.find(p => p.dbId === productId);
+        if (!product) return;
+        
+        // Add to Firebase
+        const cartRef = ref(database, `users/${currentUser.uid}/cart/${productId}`);
+        await set(cartRef, {
+            id: productId,
+            name: productName,
+            price: productPrice,
+            image: Array.isArray(product.images) ? product.images[0] : product.image,
+            quantity: currentQty,
+            discount: product.discount || 0
+        });
+        
+        // Update local cache
+        currentCart[productId] = { quantity: currentQty };
+        updateCartCount();
+        
+        // Show success message
+        showToast(`${productName} ajouté au panier!`, 'success');
+        
+        // Refresh display to show quantity controls
+        displayProducts('bestSellers', allProducts.filter(p => (p.featured || p.isNew) && p.stock > 0));
+        
+        // Visual feedback
+        button.style.background = '#10B981';
+        button.innerHTML = '<span class="material-icons" style="font-size: 20px;">check</span> Ajouté!';
+        
+        setTimeout(() => {
+            button.style.background = '#1E40AF';
+            button.innerHTML = '<span class="material-icons" style="font-size: 20px;">shopping_cart</span> Ajouter au panier';
+        }, 2000);
+        
+        showToast(`${productName} ajouté au panier!`, 'success');
+        
+        // Update cart count if exists
+        const cartCountEl = document.querySelector('[data-cart-count]');
+        if (cartCountEl) {
+            const currentCount = parseInt(cartCountEl.textContent) || 0;
+            cartCountEl.textContent = currentCount + 1;
+        }
+    } catch (error) {
+        console.error('Erreur ajout panier:', error);
+        showToast('Erreur lors de l\'ajout au panier', 'error');
     }
 }
 

@@ -14,10 +14,12 @@ const newAddressForm = document.getElementById('newAddressForm');
 let currentUser = null;
 let selectedAddressId = null;
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        loadUserInfo();
+        await loadUserInfo();
+        await loadAddresses();
+        await loadOrderSummary();
     } else {
         if (confirm('Vous devez être connecté pour passer une commande. Se connecter maintenant ?')) {
             window.location.href = 'auth.html';
@@ -62,13 +64,23 @@ async function loadAddresses() {
         <div style="margin-bottom: 1rem;">
             <label style="font-weight: 600; display: block; margin-bottom: 1rem;">Sélectionnez une adresse de livraison *</label>
             ${addressList.map(([id, address]) => `
-                <label class="address-option" style="display: block; margin-bottom: 0.8rem; cursor: pointer;">
-                    <input type="radio" name="selectedAddress" value="${id}" ${address.isDefault ? 'checked' : ''} style="margin-right: 0.8rem; cursor: pointer;">
-                    <span style="font-weight: 600;">${address.addressName}</span><br>
-                    <span style="font-size: 0.9rem; color: #64748B; margin-left: 1.6rem;">${address.street}</span><br>
-                    <span style="font-size: 0.9rem; color: #64748B; margin-left: 1.6rem;">${address.city} - ${address.phone}</span>
-                    ${address.isDefault ? '<span style="margin-left: 1.6rem; background: #10B981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Par défaut</span>' : ''}
-                </label>
+                <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 2px solid ${address.isDefault ? '#1E40AF' : '#E2E8F0'}; border-radius: 8px; background: ${address.isDefault ? '#EFF6FF' : '#F8FAFC'}; transition: all 0.2s;">
+                    <div style="flex: 1;">
+                        <label class="address-option" style="display: flex; align-items: center; cursor: pointer; margin-bottom: 0.8rem;">
+                            <input type="radio" name="selectedAddress" value="${id}" ${address.isDefault ? 'checked' : ''} style="margin-right: 0.8rem; cursor: pointer; width: 18px; height: 18px;">
+                            <span style="font-weight: 600; color: #1E40AF;">${address.addressName}</span>
+                            ${address.isDefault ? '<span style="margin-left: 0.5rem; background: #10B981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Adresse par défaut</span>' : ''}
+                        </label>
+                        <div style="margin-left: 1.8rem;">
+                            <p style="margin: 0.3rem 0; color: #64748B; font-size: 0.9rem;">${address.street}</p>
+                            <p style="margin: 0.3rem 0; color: #64748B; font-size: 0.9rem;">${address.city} - ${address.phone}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                        ${!address.isDefault ? `<button type="button" class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;" onclick="setDefaultAddressCheckout('${id}')">Définir défaut</button>` : ''}
+                        <button type="button" class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; background: #EF4444; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;" onclick="deleteAddressCheckout('${id}')">Supprimer</button>
+                    </div>
+                </div>
             `).join('')}
         </div>
     `;
@@ -84,10 +96,10 @@ async function loadAddresses() {
         selectedAddressId = addressList.find(([_, addr]) => addr.isDefault)?.[0] || addressList[0][0];
     }
 
-    // Mettre à jour le bouton
-    if (addressList.length >= 3) {
-        toggleNewAddressBtn.style.display = 'none';
-    } else {
+    // Mettre à jour le bouton - afficher en bas du formulaire
+    const hasSpace = addressList.length < 3;
+    toggleNewAddressBtn.style.display = hasSpace ? 'block' : 'none';
+    if (hasSpace) {
         toggleNewAddressBtn.textContent = `+ Ajouter une nouvelle adresse (${addressList.length}/3)`;
     }
 }
@@ -128,14 +140,60 @@ newAddressForm.addEventListener('submit', async (e) => {
     }
 });
 
-function loadOrderSummary() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    
-    if (cart.length === 0) {
-        alert('Votre panier est vide');
-        window.location.href = 'cart.html';
-        return;
+window.setDefaultAddressCheckout = async function(addressId) {
+    try {
+        const result = await addressSystem.setDefaultAddress(currentUser.uid, addressId);
+        if (result.success) {
+            showToast('Adresse par défaut changée !', 'success');
+            await loadAddresses();
+        } else {
+            showToast('Erreur lors du changement d\'adresse par défaut', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur lors du changement d\'adresse', 'error');
     }
+};
+
+window.deleteAddressCheckout = async function(addressId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette adresse ?')) return;
+    
+    try {
+        const result = await addressSystem.deleteAddress(currentUser.uid, addressId);
+        if (result.success) {
+            showToast('Adresse supprimée !', 'success');
+            await loadAddresses();
+        } else {
+            showToast('Erreur lors de la suppression', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur lors de la suppression d\'adresse', 'error');
+    }
+};
+
+async function loadOrderSummary() {
+    try {
+        if (!currentUser) return;
+        const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+        const snapshot = await get(cartRef);
+        const cartData = snapshot.exists() ? snapshot.val() : {};
+        
+        const cart = Object.values(cartData).map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            quantity: item.quantity,
+            discount: item.discount || 0,
+            originalPrice: item.price / (1 - (item.discount || 0) / 100)
+        }));
+        
+        if (cart.length === 0) {
+            alert('Votre panier est vide');
+            window.location.href = 'cart.html';
+            return;
+        }
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const originalTotal = cart.reduce((sum, item) => sum + ((item.originalPrice || item.price) * item.quantity), 0);
@@ -180,6 +238,10 @@ function loadOrderSummary() {
             <span>${subtotal.toLocaleString()} FCFA</span>
         </div>
     `;
+    } catch (error) {
+        console.error('Erreur chargement résumé:', error);
+        orderSummary.innerHTML = '<p>Erreur lors du chargement du panier</p>';
+    }
 }
 
 async function sendOrderEmails(orderId, orderData) {
@@ -189,43 +251,78 @@ async function sendOrderEmails(orderId, orderData) {
             'card': 'Carte bancaire',
             'cash': 'Paiement à la livraison'
         }[orderData.paymentMethod] || orderData.paymentMethod;
-        
-        await Promise.allSettled([
-            fetch('/send-order-confirmation', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    customerEmail: orderData.email,
-                    customerName: orderData.fullName,
-                    orderId: orderId,
-                    items: orderData.items,
-                    total: orderData.total,
-                    orderDate: orderData.createdAt,
-                    address: orderData.address,
-                    city: orderData.city,
-                    paymentMethod: paymentMethodText
-                })
-            }),
-            fetch('/send-admin-notification', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    adminEmail: 'henocmarc1@gmail.com',
-                    customerEmail: orderData.email,
-                    customerName: orderData.fullName,
-                    orderId: orderId,
-                    items: orderData.items,
-                    total: orderData.total,
-                    orderDate: orderData.createdAt,
-                    address: orderData.address,
-                    city: orderData.city,
-                    phone: orderData.phone,
-                    paymentMethod: paymentMethodText
-                })
-            })
+
+        const itemsList = orderData.items.map(item => {
+            const imageUrl = item.image || (Array.isArray(item.images) ? item.images[0] : '');
+            return `
+            <tr style="vertical-align: top">
+              <td style="padding: 16px 8px 0 4px; display: inline-block; width: max-content">
+                <img style="height: 64px; border-radius: 4px;" height="64px" src="${imageUrl}" alt="${item.name}" />
+              </td>
+              <td style="padding: 16px 8px 0 8px; width: 100%">
+                <div><strong>${item.name}</strong></div>
+                <div style="font-size: 13px; color: #888; padding-top: 4px">QTY: ${item.quantity}</div>
+              </td>
+              <td style="padding: 16px 4px 0 0; white-space: nowrap; text-align: right">
+                <strong>${(item.price * item.quantity).toLocaleString()} FCFA</strong>
+              </td>
+            </tr>
+        `;
+        }).join('');
+
+        // Email de confirmation client
+        const customerEmailParams = {
+            to_email: orderData.email,
+            customer_name: orderData.fullName,
+            order_id: orderId,
+            items_list: itemsList,
+            total: orderData.total.toLocaleString(),
+            order_date: new Date(orderData.createdAt).toLocaleDateString('fr-FR'),
+            address: orderData.address,
+            city: orderData.city,
+            payment_method: paymentMethodText
+        };
+
+        // Email de notification admin
+        const adminEmailParams = {
+            to_email: 'henocmarc1@gmail.com',
+            customer_email: orderData.email,
+            customer_name: orderData.fullName,
+            phone: orderData.phone,
+            order_id: orderId,
+            items_list: itemsList,
+            total: orderData.total.toLocaleString(),
+            order_date: new Date(orderData.createdAt).toLocaleDateString('fr-FR'),
+            address: orderData.address,
+            city: orderData.city,
+            payment_method: paymentMethodText
+        };
+
+        console.log('📧 Envoi email client avec params:', customerEmailParams);
+        console.log('📧 Envoi email admin avec params:', adminEmailParams);
+
+        // Envoyer les deux emails avec EmailJS
+        const results = await Promise.allSettled([
+            emailjs.send('service_kdo9g25', 'template_xq0cxxo', customerEmailParams),
+            emailjs.send('service_kdo9g25', 'template_xq0cxxo', adminEmailParams)
         ]);
+
+        if (results[0].status === 'fulfilled') {
+            console.log('✅ Email client envoyé avec succès');
+            showToast('✅ Email de confirmation envoyé!', 'success');
+        } else {
+            console.error('❌ Erreur email client:', results[0].reason);
+        }
+
+        if (results[1].status === 'fulfilled') {
+            console.log('✅ Email admin envoyé avec succès');
+        } else {
+            console.error('❌ Erreur email admin:', results[1].reason);
+        }
+
     } catch (error) {
-        console.error('Erreur lors de l\'envoi des emails:', error);
+        console.error('❌ Erreur lors de l\'envoi des emails EmailJS:', error);
+        showToast('⚠️ Erreur envoi email: ' + error.message, 'warning');
     }
 }
 
@@ -237,7 +334,19 @@ checkoutForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+    const cartSnapshot = await get(cartRef);
+    const cartData = cartSnapshot.exists() ? cartSnapshot.val() : {};
+    
+    const cart = Object.values(cartData).map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        quantity: item.quantity,
+        discount: item.discount || 0
+    }));
+    
     if (cart.length === 0) {
         showToast('Votre panier est vide', 'warning');
         return;
@@ -335,7 +444,7 @@ checkoutForm.addEventListener('submit', async (e) => {
             return;
         }
 
-        localStorage.removeItem('cart');
+        await remove(ref(database, `users/${currentUser.uid}/cart`));
         window.updateCartCount();
 
         sendOrderEmails(orderId, orderData);
@@ -347,6 +456,3 @@ checkoutForm.addEventListener('submit', async (e) => {
         showToast('Erreur lors de la création de la commande. Veuillez réessayer.', 'error');
     }
 });
-
-loadOrderSummary();
-loadAddresses();

@@ -11,11 +11,17 @@ if (!productId) {
 
 let currentUser = null;
 let userFavorites = {};
+let currentCart = {};
 
 onAuthStateChanged(auth, (user) => {
     currentUser = user;
     if (user) {
         loadUserFavorites();
+        loadCart();
+        // Recharger le produit après le chargement du panier
+        setTimeout(() => loadProduct(), 500);
+    } else {
+        loadProduct();
     }
 });
 
@@ -36,6 +42,28 @@ async function loadProduct() {
     } catch (error) {
         console.error('Erreur lors du chargement du produit:', error);
         document.getElementById('productContent').innerHTML = '<p>Erreur lors du chargement du produit.</p>';
+    }
+}
+
+async function loadCart() {
+    try {
+        if (!currentUser) return;
+        const cartRef = ref(database, `users/${currentUser.uid}/cart`);
+        const snapshot = await get(cartRef);
+        if (snapshot.exists()) {
+            currentCart = snapshot.val();
+            updateCartCount();
+        } else {
+            currentCart = {};
+        }
+    } catch (error) {
+        console.error('Erreur chargement panier:', error);
+    }
+}
+
+function updateCartCount() {
+    if (window.updateCartCount) {
+        window.updateCartCount();
     }
 }
 
@@ -159,7 +187,7 @@ function displayProduct(product) {
                 
                 <div class="quantity-selector">
                     <button onclick="decreaseQuantity()">-</button>
-                    <input type="number" id="quantity" value="1" min="1" max="${product.stock}" readonly>
+                    <input type="number" id="quantity" value="${currentCart[productId]?.quantity || 1}" min="1" max="${product.stock}" readonly>
                     <button onclick="increaseQuantity(${product.stock})">+</button>
                 </div>
                 
@@ -277,6 +305,51 @@ async function toggleFavorite(productId, productName) {
     } catch (error) {
         console.error('Erreur:', error);
         showToast('Erreur lors de la mise à jour des favoris', 'error');
+    }
+}
+
+async function addToCartFromDetail(productId, productName, price, image, stock, originalPrice, discount) {
+    try {
+        if (!currentUser) {
+            showToast('Connectez-vous pour ajouter au panier', 'warning');
+            window.location.href = 'auth.html';
+            return;
+        }
+
+        const quantityInput = parseInt(document.getElementById('quantity').value) || 1;
+        
+        if (quantityInput > stock) {
+            showToast('Quantité insuffisante en stock', 'error');
+            return;
+        }
+
+        const cartRef = ref(database, `users/${currentUser.uid}/cart/${productId}`);
+        
+        await set(cartRef, {
+            id: productId,
+            name: productName,
+            price: price,
+            image: image,
+            discount: discount || 0,
+            quantity: quantityInput
+        });
+
+        currentCart[productId] = { quantity: quantityInput };
+        window.updateCartCount();
+        
+        const btn = document.getElementById('addToCartBtn');
+        btn.style.background = '#10B981';
+        btn.innerHTML = '<span class="material-icons" style="font-size: 20px;">check</span> Ajouté!';
+        
+        setTimeout(() => {
+            btn.style.background = '#1E40AF';
+            btn.innerHTML = '<span class="material-icons" style="font-size: 20px;">shopping_cart</span> Ajouter au panier';
+        }, 2000);
+
+        showToast(`${productName} ajouté au panier!`, 'success');
+    } catch (error) {
+        console.error('Erreur ajout panier:', error);
+        showToast('Erreur lors de l\'ajout au panier', 'error');
     }
 }
 

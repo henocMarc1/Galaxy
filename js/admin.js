@@ -22,51 +22,26 @@ const productDiscountInput = document.getElementById('productDiscount');
 const discountedPriceDisplay = document.getElementById('discountedPriceDisplay');
 const discountedPriceValue = document.getElementById('discountedPriceValue');
 
+// Fonction pour calculer et afficher le prix réduit
+function updateDiscountedPrice() {
+    const price = parseFloat(productPriceInput?.value || 0);
+    const discount = parseFloat(productDiscountInput?.value || 0);
+    
+    if (price > 0 && discount > 0) {
+        const discountedPrice = price * (1 - discount / 100);
+        discountedPriceValue.textContent = formatCurrency(discountedPrice);
+        discountedPriceDisplay.style.display = 'block';
+    } else {
+        discountedPriceDisplay.style.display = 'none';
+    }
+}
+
 let currentUser = null;
 let isAdmin = false;
 let uploadedImageUrls = [null, null, null];
 let cloudinaryWidgets = [null, null, null];
 
 function formatCurrency(amount) {
-
-// =============== EXPORT FUNCTIONS (COMBO B) ===============
-async function setupExports() {
-    const csvBtn = document.getElementById('exportCSV');
-    const pdfBtn = document.getElementById('exportPDF');
-    
-    if (csvBtn) csvBtn.addEventListener('click', () => {
-        const data = {
-            'Revenu Total': document.querySelector('.admin-stat-value')?.textContent || 'N/A',
-            'Commandes': document.querySelectorAll('.admin-stat-value')[1]?.textContent || 'N/A',
-            'Produits': document.querySelectorAll('.admin-stat-value')[2]?.textContent || 'N/A',
-            'Clients': document.querySelectorAll('.admin-stat-value')[3]?.textContent || 'N/A'
-        };
-        const csv = Object.entries(data).map(([k, v]) => `${k},${v}`).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        showToast('Analytics exporté en CSV', 'success');
-    });
-    
-    if (pdfBtn) pdfBtn.addEventListener('click', () => {
-        const element = document.getElementById('adminStatsContainer');
-        const opt = {
-            margin: 10,
-            filename: `analytics-${new Date().toISOString().split('T')[0]}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-        };
-        if (window.html2pdf) {
-            window.html2pdf().set(opt).from(element).save();
-            showToast('Analytics exporté en PDF', 'success');
-        }
-    });
-}
-
     if (!amount && amount !== 0) return '0 FCFA';
     
     let numericValue = amount;
@@ -86,6 +61,95 @@ async function setupExports() {
     });
     
     return formatter.format(numericValue) + ' FCFA';
+}
+
+// =============== EXPORT FUNCTIONS (COMBO B) ===============
+function setupExports() {
+    console.log("🔧 SETUP EXPORTS - Finding buttons...");
+    
+    // CSV EXPORT
+    const csvBtn = document.getElementById("exportCSV");
+    if (csvBtn) {
+        csvBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            console.log("📊 CSV Export clicked!");
+            try {
+                const statValues = document.querySelectorAll(".admin-stat-value");
+                console.log("Found stat values:", statValues.length);
+                
+                const data = [
+                    ["Métrique", "Valeur"],
+                    ["Revenu Total", statValues[0]?.textContent?.trim() || "N/A"],
+                    ["Commandes", statValues[1]?.textContent?.trim() || "N/A"],
+                    ["Produits", statValues[2]?.textContent?.trim() || "N/A"],
+                    ["Clients", statValues[3]?.textContent?.trim() || "N/A"],
+                    ["Revenu/Jour", statValues[4]?.textContent?.trim() || "N/A"],
+                    ["Top Produit", statValues[5]?.textContent?.trim() || "N/A"]
+                ];
+                
+                const csv = data.map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const link = document.createElement("a");
+                link.setAttribute("href", URL.createObjectURL(blob));
+                link.setAttribute("download", `analytics-${new Date().toISOString().split("T")[0]}.csv`);
+                link.style.visibility = "hidden";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                console.log("✅ CSV Downloaded!");
+                showToast("✅ Analytics exporté en CSV", "success");
+            } catch (err) { 
+                console.error("❌ CSV Error:", err);
+                showToast("❌ Erreur CSV: " + err.message, "error");
+            }
+        });
+        console.log("✅ CSV button listener added");
+    } else {
+        console.log("❌ exportCSV button not found!");
+    }
+    
+    // PDF EXPORT
+    const pdfBtn = document.getElementById("exportPDF");
+    if (pdfBtn) {
+        pdfBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            console.log("📄 PDF Export clicked!");
+            try {
+                if (!window.html2pdf) {
+                    console.error("html2pdf not loaded");
+                    showToast("❌ Bibliothèque PDF non chargée", "error");
+                    return;
+                }
+                
+                const el = document.getElementById("adminStatsContainer");
+                if (!el) {
+                    console.error("adminStatsContainer not found");
+                    showToast("❌ Contenu PDF non trouvé", "error");
+                    return;
+                }
+                
+                console.log("Generating PDF from element...");
+                const options = {
+                    margin: 10,
+                    filename: `analytics-${new Date().toISOString().split("T")[0]}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+                };
+                
+                window.html2pdf().set(options).from(el).save();
+                console.log("✅ PDF Generated!");
+                showToast("✅ Analytics exporté en PDF", "success");
+            } catch (err) { 
+                console.error("❌ PDF Error:", err);
+                showToast("❌ Erreur PDF: " + err.message, "error");
+            }
+        });
+        console.log("✅ PDF button listener added");
+    } else {
+        console.log("❌ exportPDF button not found!");
+    }
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -124,7 +188,7 @@ function initImagesForm() {
         section.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <label style="font-weight: 600;">Photo ${imageNum} ${imageNum === 1 ? '(Principale)' : ''}</label>
-                <button type="button" class="cloudinary-upload-btn-${i}" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                <button type="button" class="cloudinary-upload-btn cloudinary-upload-btn-${i}" style="padding: 0.6rem 1rem; font-size: 0.85rem; background: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s ease; hover: background: #1E40AF;">
                     ☁️ Upload
                 </button>
             </div>
@@ -231,26 +295,25 @@ async function checkAdminAccess() {
 }
 
 adminNavLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
+    link.addEventListener("click", (e) => {
         e.preventDefault();
         const targetTab = link.dataset.tab;
         
-        adminNavLinks.forEach(l => l.classList.remove('active'));
-        adminTabContents.forEach(c => {
-            c.classList.remove('active');
-            c.style.display = 'none';
-        });
+        adminNavLinks.forEach(l => l.classList.remove("active"));
+        adminTabContents.forEach(c => c.classList.remove("active"));
         
-        link.classList.add('active');
+        link.classList.add("active");
         const targetElement = document.getElementById(targetTab);
         if (targetElement) {
-            targetElement.classList.add('active');
-            targetElement.style.display = 'block';
-            
+            targetElement.classList.add("active");
+            if (targetTab === "analytics") { setTimeout(() => { setupExports(); loadAdminStats(); }, 100); }
+            else if (targetTab === "products") { setTimeout(() => { loadProducts(); }, 100); }
+            else if (targetTab === "orders") { setTimeout(() => { loadOrders(); }, 100); }
+            else if (targetTab === "members") { setTimeout(() => { loadMembers(); }, 100); }
+            else if (targetTab === "audit") { setTimeout(() => { loadAuditLogs(); }, 100); }
         }
     });
 });
-
 
 for (let i = 0; i < 3; i++) {
     const input = document.getElementById(`productImage${i}`);
@@ -294,9 +357,22 @@ async function loadProducts() {
                         <option value="Bébé & Maman">Bébé & Maman</option>
                     </select>
                 </div>
+
+                <div id="bulkActionsBar" class="bulk-actions-bar" style="display: none;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span id="selectedCount" style="font-weight: 600;">0 sélectionnés</span>
+                        <button id="bulkChangePriceBtn" class="btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">💰 Prix</button>
+                        <button id="bulkChangeDiscountBtn" class="btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">📊 Rabais</button>
+                        <button id="bulkChangeCategoryBtn" class="btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">🏷️ Catégorie</button>
+                        <button id="bulkDeleteBtn" class="btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem; background: #EF4444; color: white;">🗑️ Supprimer</button>
+                        <button id="bulkCancelBtn" class="btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem; margin-left: auto;">Annuler</button>
+                    </div>
+                </div>
+
                 <table class="data-table sortable-table" id="productsDataTable">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAllCheckbox" class="bulk-checkbox"></th>
                             <th>Image</th>
                             <th class="sortable" onclick="sortTable(1, 'productsDataTable')">ID ↕</th>
                             <th class="sortable" onclick="sortTable(2, 'productsDataTable')">Nom ↕</th>
@@ -310,7 +386,8 @@ async function loadProducts() {
                     </thead>
                     <tbody>
                         ${products.map(product => `
-                            <tr data-name="${product.name.toLowerCase()}" data-category="${product.category}" data-id="${product.id.toLowerCase()}">
+                            <tr data-name="${product.name.toLowerCase()}" data-category="${product.category}" data-id="${product.id.toLowerCase()}" data-product-id="${product.id}">
+                                <td><input type="checkbox" class="product-checkbox" value="${product.id}"></td>
                                 <td><img src="${Array.isArray(product.images) ? product.images[0] : product.image}" alt="${product.name}"></td>
                                 <td><strong style="color: var(--primary-color);">${product.id}</strong></td>
                                 <td>${product.name}</td>
@@ -335,6 +412,7 @@ async function loadProducts() {
             `;
             
             setupProductFilters();
+            setupBulkActions(products);
         } else {
             productsTable.innerHTML = '<p>Aucun produit dans la base de données.</p>';
         }
@@ -1171,17 +1249,32 @@ productForm.addEventListener('submit', async (e) => {
 
     // Add optional extra infos if any field is filled
     const extraInfos = {};
-    const brand = document.getElementById('productBrand').value.trim();
-    const volume = document.getElementById('productVolume').value.trim();
-    const format = document.getElementById('productFormat').value.trim();
-    const origin = document.getElementById('productOrigin').value.trim();
-    const color = document.getElementById('productColor').value.trim();
+    const brandField = document.getElementById('productBrand');
+    const volumeField = document.getElementById('productVolume');
+    const formatField = document.getElementById('productFormat');
+    const originField = document.getElementById('productOrigin');
+    const colorField = document.getElementById('productColor');
 
-    if (brand) extraInfos.brand = brand;
-    if (volume) extraInfos.volume = volume;
-    if (format) extraInfos.format = format;
-    if (origin) extraInfos.origin = origin;
-    if (color) extraInfos.color = color;
+    if (brandField) {
+        const brand = brandField.value.trim();
+        if (brand) extraInfos.brand = brand;
+    }
+    if (volumeField) {
+        const volume = volumeField.value.trim();
+        if (volume) extraInfos.volume = volume;
+    }
+    if (formatField) {
+        const format = formatField.value.trim();
+        if (format) extraInfos.format = format;
+    }
+    if (originField) {
+        const origin = originField.value.trim();
+        if (origin) extraInfos.origin = origin;
+    }
+    if (colorField) {
+        const color = colorField.value.trim();
+        if (color) extraInfos.color = color;
+    }
 
     if (Object.keys(extraInfos).length > 0) {
         productData.extraInfos = extraInfos;
@@ -1227,19 +1320,22 @@ window.editProduct = async function(productId) {
             document.getElementById('productFeatured').checked = product.featured || false;
             document.getElementById('productNew').checked = product.isNew || false;
             
+            // Afficher le prix réduit si applicable
+            updateDiscountedPrice();
+            
             // Load extra infos if they exist
             if (product.extraInfos) {
-                document.getElementById('productBrand').value = product.extraInfos.brand || '';
-                document.getElementById('productVolume').value = product.extraInfos.volume || '';
-                document.getElementById('productFormat').value = product.extraInfos.format || '';
-                document.getElementById('productOrigin').value = product.extraInfos.origin || '';
-                document.getElementById('productColor').value = product.extraInfos.color || '';
+                if (document.getElementById('productBrand')) document.getElementById('productBrand').value = product.extraInfos.brand || '';
+                if (document.getElementById('productVolume')) document.getElementById('productVolume').value = product.extraInfos.volume || '';
+                if (document.getElementById('productFormat')) document.getElementById('productFormat').value = product.extraInfos.format || '';
+                if (document.getElementById('productOrigin')) document.getElementById('productOrigin').value = product.extraInfos.origin || '';
+                if (document.getElementById('productColor')) document.getElementById('productColor').value = product.extraInfos.color || '';
             } else {
-                document.getElementById('productBrand').value = '';
-                document.getElementById('productVolume').value = '';
-                document.getElementById('productFormat').value = '';
-                document.getElementById('productOrigin').value = '';
-                document.getElementById('productColor').value = '';
+                if (document.getElementById('productBrand')) document.getElementById('productBrand').value = '';
+                if (document.getElementById('productVolume')) document.getElementById('productVolume').value = '';
+                if (document.getElementById('productFormat')) document.getElementById('productFormat').value = '';
+                if (document.getElementById('productOrigin')) document.getElementById('productOrigin').value = '';
+                if (document.getElementById('productColor')) document.getElementById('productColor').value = '';
             }
             
             // Charger les 3 images
@@ -1262,11 +1358,16 @@ window.editProduct = async function(productId) {
             
             productModal.classList.add('show');
             setupProductFormTabs();
+            
+            // Ajouter les event listeners pour les changements prix/rabais
+            productPriceInput?.addEventListener('input', updateDiscountedPrice);
+            productDiscountInput?.addEventListener('input', updateDiscountedPrice);
         }
     } catch (error) {
         console.error('Erreur lors du chargement du produit:', error);
     }
 };
+
 
 window.deleteProduct = async function(productId) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
@@ -1504,5 +1605,138 @@ window.viewMemberDetailFromOrder = async function(userId) {
         alert('Aucun utilisateur associé à cette commande.');
     }
 };
+
+// ===== BULK ACTIONS MANAGEMENT =====
+function setupBulkActions(products) {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const productCheckboxes = document.querySelectorAll('.product-checkbox');
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCount = document.getElementById('selectedCount');
+
+    function updateBulkActionsBar() {
+        const selectedIds = Array.from(productCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+        if (selectedIds.length > 0) {
+            bulkActionsBar.style.display = 'block';
+            selectedCount.textContent = `${selectedIds.length} sélectionnés`;
+        } else {
+            bulkActionsBar.style.display = 'none';
+        }
+        selectAllCheckbox.checked = selectedIds.length === products.length && products.length > 0;
+    }
+
+    selectAllCheckbox?.addEventListener('change', (e) => {
+        productCheckboxes.forEach(cb => cb.checked = e.target.checked);
+        updateBulkActionsBar();
+    });
+
+    productCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateBulkActionsBar);
+    });
+
+    // Bouton Prix
+    document.getElementById('bulkChangePriceBtn')?.addEventListener('click', () => {
+        const newPrice = prompt('Entrez le nouveau prix (FCFA):');
+        if (newPrice && !isNaN(newPrice)) {
+            const selectedIds = Array.from(productCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+            selectedIds.forEach(id => {
+                update(ref(database, `products/${id}`), { price: parseFloat(newPrice) });
+            });
+            showToast(`✅ Prix changé pour ${selectedIds.length} produits`, 'success');
+            setTimeout(() => loadProducts(), 500);
+        }
+    });
+
+    // Bouton Rabais
+    document.getElementById('bulkChangeDiscountBtn')?.addEventListener('click', () => {
+        const newDiscount = prompt('Entrez le nouveau rabais (%):');
+        if (newDiscount && !isNaN(newDiscount) && newDiscount >= 0 && newDiscount <= 100) {
+            const selectedIds = Array.from(productCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+            selectedIds.forEach(id => {
+                update(ref(database, `products/${id}`), { discount: parseInt(newDiscount) });
+            });
+            showToast(`✅ Rabais changé pour ${selectedIds.length} produits`, 'success');
+            setTimeout(() => loadProducts(), 500);
+        }
+    });
+
+    // Bouton Catégorie
+    document.getElementById('bulkChangeCategoryBtn')?.addEventListener('click', () => {
+        const categories = ['Parfums', 'Épicerie', 'Boissons', 'Hygiène & Beauté', 'Produits ménagers', 'Fruits & Légumes', 'Snacks', 'Surgelés', 'Bébé & Maman'];
+        const categoryList = categories.join('\n');
+        const newCategory = prompt(`Sélectionnez une nouvelle catégorie:\n${categoryList}`, categories[0]);
+        if (newCategory && categories.includes(newCategory)) {
+            const selectedIds = Array.from(productCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+            selectedIds.forEach(id => {
+                update(ref(database, `products/${id}`), { category: newCategory });
+            });
+            showToast(`✅ Catégorie changée pour ${selectedIds.length} produits`, 'success');
+            setTimeout(() => loadProducts(), 500);
+        }
+    });
+
+    // Bouton Supprimer
+    document.getElementById('bulkDeleteBtn')?.addEventListener('click', () => {
+        const selectedIds = Array.from(productCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+        if (selectedIds.length > 0 && confirm(`Êtes-vous sûr de vouloir supprimer ${selectedIds.length} produits?`)) {
+            selectedIds.forEach(id => {
+                remove(ref(database, `products/${id}`));
+            });
+            showToast(`✅ ${selectedIds.length} produits supprimés`, 'success');
+            setTimeout(() => loadProducts(), 500);
+        }
+    });
+
+    // Bouton Annuler
+    document.getElementById('bulkCancelBtn')?.addEventListener('click', () => {
+        productCheckboxes.forEach(cb => cb.checked = false);
+        selectAllCheckbox.checked = false;
+        bulkActionsBar.style.display = 'none';
+    });
+}
+
+// ===== GENERATE DESCRIPTION WITH AI =====
+document.getElementById('generateDescBtn')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const productName = document.getElementById('productName').value.trim();
+    if (!productName) {
+        showToast('Entrez le nom du produit d\'abord', 'warning');
+        return;
+    }
+    
+    const btn = e.target.closest('button');
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.innerHTML = '<span class="material-icons" style="font-size: 18px; animation: spin 1s linear infinite;">refresh</span> Génération...';
+    
+    try {
+        const response = await fetch('/api/generate-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productName })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const descText = data.description || '';
+            // Stocker en textarea pour sauvegarde
+            document.getElementById('productDescription').value = descText;
+            // Afficher en HTML dans la preview
+            document.getElementById('productDescriptionPreview').innerHTML = descText;
+            document.getElementById('productDescriptionPreview').style.display = 'block';
+            
+            showToast('✨ Description générée!', 'success');
+        } else {
+            const error = await response.json();
+            showToast('❌ ' + (error.error || 'Erreur génération'), 'error');
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('❌ Erreur: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.innerHTML = '<span class="material-icons" style="font-size: 18px;">sparkles</span> Générer';
+    }
+});
 
 

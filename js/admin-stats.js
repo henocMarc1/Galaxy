@@ -4,6 +4,27 @@ import { ref, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-dat
 
 window.loadAdminStats = async function() {
     try {
+        // Load products FIRST to create category map
+        const productsRef = ref(database, 'products');
+        const productsSnapshot = await get(productsRef);
+        let totalProducts = 0, totalStock = 0;
+        const topProducts = [];
+        const productCategoryMap = {}; // productId → category
+        
+        if (productsSnapshot.exists()) {
+            productsSnapshot.forEach(child => {
+                const product = child.val();
+                productCategoryMap[child.key] = product.category || 'Sans catégorie';
+                totalProducts++;
+                totalStock += product.stock || 0;
+                topProducts.push({
+                    id: child.key,
+                    name: product.name,
+                    sales: 0
+                });
+            });
+        }
+        
         // Load orders and analytics
         const ordersRef = ref(database, 'orders');
         const ordersSnapshot = await get(ordersRef);
@@ -22,7 +43,8 @@ window.loadAdminStats = async function() {
                     order.items.forEach(item => {
                         const productId = item.id;
                         salesCount[productId] = (salesCount[productId] || 0) + (item.quantity || 1);
-                        const category = item.category || 'Unknown';
+                        // Use map to get real category
+                        const category = productCategoryMap[productId] || 'Sans catégorie';
                         categoryRevenue[category] = (categoryRevenue[category] || 0) + ((item.price || 0) * (item.quantity || 1));
                     });
                 }
@@ -31,24 +53,10 @@ window.loadAdminStats = async function() {
             });
         }
         
-        // Load products
-        const productsRef = ref(database, 'products');
-        const productsSnapshot = await get(productsRef);
-        let totalProducts = 0, totalStock = 0;
-        const topProducts = [];
-        
-        if (productsSnapshot.exists()) {
-            productsSnapshot.forEach(child => {
-                const product = child.val();
-                totalProducts++;
-                totalStock += product.stock || 0;
-                topProducts.push({
-                    id: child.key,
-                    name: product.name,
-                    sales: salesCount[child.key] || 0
-                });
-            });
-        }
+        // Update topProducts sales count
+        topProducts.forEach(prod => {
+            prod.sales = salesCount[prod.id] || 0;
+        });
         
         topProducts.sort((a, b) => b.sales - a.sales);
         const topProductsList = topProducts.slice(0, 5);
@@ -73,6 +81,19 @@ window.loadAdminStats = async function() {
         const last7Days = Object.values(ordersByDate).slice(-7);
         const avgDailyRevenue = last7Days.length > 0 ? Math.round(last7Days.reduce((a, b) => a + b, 0) / last7Days.length) : 0;
         
+        // Find products with low stock (< 10)
+        const lowStockProducts = [];
+        productsSnapshot.forEach(child => {
+            const product = child.val();
+            if ((product.stock || 0) < 10 && (product.stock || 0) > 0) {
+                lowStockProducts.push({
+                    name: product.name,
+                    stock: product.stock
+                });
+            }
+        });
+        lowStockProducts.sort((a, b) => a.stock - b.stock);
+
         // Render stats
         const statsHTML = `
             <div class="admin-stats-grid">
@@ -109,6 +130,54 @@ window.loadAdminStats = async function() {
                     <div class="admin-stat-change">${topProductsList[0]?.sales || 0} ventes</div>
                 </div>
             </div>
+
+            <!-- NEW: TOP 5 PRODUCTS TABLE -->
+            <div style="background: var(--card-bg); padding: 2rem; border-radius: 12px; margin-top: 2rem;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <span class="material-icons" style="color: #F59E0B;">local_fire_department</span>
+                    Top 5 Produits Les Plus Vendus
+                </h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: var(--bg-primary, #F8FAFC); border-bottom: 2px solid var(--text-muted, #CBD5E1);">
+                        <tr>
+                            <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Produit</th>
+                            <th style="padding: 0.75rem; text-align: center; font-weight: 600;">Ventes</th>
+                            <th style="padding: 0.75rem; text-align: center; font-weight: 600;">% Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${topProductsList.map((prod, idx) => `
+                            <tr style="border-bottom: 1px solid var(--border-color, #E2E8F0);">
+                                <td style="padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="display: inline-block; width: 24px; height: 24px; background: #3B82F6; color: white; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold; font-size: 0.8rem;">${idx + 1}</span>
+                                    ${prod.name?.substring(0, 25) || 'N/A'}
+                                </td>
+                                <td style="padding: 0.75rem; text-align: center; font-weight: 600;">${prod.sales || 0}</td>
+                                <td style="padding: 0.75rem; text-align: center; color: #10B981;">${totalItems > 0 ? Math.round((prod.sales / totalItems) * 100) : 0}%</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- NEW: LOW STOCK ALERT -->
+            ${lowStockProducts.length > 0 ? `
+            <div style="background: var(--card-bg); padding: 2rem; border-radius: 12px; margin-top: 2rem; border-left: 4px solid #EF4444;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #EF4444;">
+                    <span class="material-icons">warning</span>
+                    ⚠️ Produits en Stock Faible (< 10 unités) - ${lowStockProducts.length} produit(s)
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; max-height: 500px; overflow-y: auto; padding-right: 0.5rem;">
+                    ${lowStockProducts.map(prod => `
+                        <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); padding: 1rem; border-radius: 8px; border: 1px solid #FECACA; flex-shrink: 0;">
+                            <div style="font-weight: 600; margin-bottom: 0.5rem;">${prod.name?.substring(0, 25)}</div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #DC2626;">${prod.stock} unités</div>
+                            <div style="font-size: 0.8rem; color: #991B1B; margin-top: 0.5rem;">🔴 Réapprovisionnement urgent</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
         `;
         
         const statsContainer = document.getElementById('adminStatsContainer');
