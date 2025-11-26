@@ -36,7 +36,7 @@ function loadCart() {
                             ${hasItemDiscount ? `<span class="cart-item-discount-badge">-${itemDiscount}%</span>` : ''}
                         </div>
                         <div class="cart-item-info">
-                            <h3>${item.name}</h3>
+                            <h3><a href="product-detail.html?id=${item.id}" style="cursor: pointer; color: #1E40AF; text-decoration: none; font-weight: 600; transition: opacity 0.2s;">${item.name}</a></h3>
                             ${hasItemDiscount ? `
                                 <p class="product-price-original" style="text-decoration: line-through; color: #94A3B8; font-size: 0.9rem;">${itemOriginalPrice.toLocaleString()} FCFA</p>
                                 <p class="product-price">${item.price.toLocaleString()} FCFA <span style="color: #10B981; font-size: 0.85rem; font-weight: 600;">(-${Math.round(itemOriginalPrice - item.price).toLocaleString()} FCFA)</span></p>
@@ -70,7 +70,7 @@ function loadCart() {
                         <span style="text-decoration: line-through; color: #94A3B8;">${originalTotal.toLocaleString()} FCFA</span>
                     </div>
                     <div class="summary-row" style="color: #10B981; font-weight: 600;">
-                        <span>🎉 Économies totales:</span>
+                        <span><span class="material-icons" style="vertical-align: middle;">local_offer</span> Économies totales:</span>
                         <span>-${totalSavings.toLocaleString()} FCFA</span>
                     </div>
                 ` : ''}

@@ -1,18 +1,11 @@
 import { auth, database } from './firebase-config.js';
-import { addressSystem } from './addresses.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import { ref, push, get, runTransaction, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const checkoutForm = document.getElementById('checkoutForm');
 const orderSummary = document.getElementById('orderSummary');
-const addressesContainer = document.getElementById('addressesContainer');
-const newAddressSection = document.getElementById('newAddressSection');
-const toggleNewAddressBtn = document.getElementById('toggleNewAddressBtn');
-const cancelNewAddressBtn = document.getElementById('cancelNewAddress');
-const newAddressForm = document.getElementById('newAddressForm');
 
 let currentUser = null;
-let selectedAddressId = null;
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -42,91 +35,6 @@ async function loadUserInfo() {
         console.error('Erreur lors du chargement des informations utilisateur:', error);
     }
 }
-
-async function loadAddresses() {
-    const addresses = await addressSystem.loadUserAddresses(currentUser.uid);
-    const addressList = Object.entries(addresses);
-
-    if (addressList.length === 0) {
-        addressesContainer.innerHTML = `
-            <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                <p style="margin: 0; color: #92400E;">Vous n'avez pas encore d'adresse de livraison. Créez-en une !</p>
-            </div>
-        `;
-        toggleNewAddressBtn.textContent = '+ Ajouter votre première adresse';
-        return;
-    }
-
-    // Afficher les adresses existantes
-    addressesContainer.innerHTML = `
-        <div style="margin-bottom: 1rem;">
-            <label style="font-weight: 600; display: block; margin-bottom: 1rem;">Sélectionnez une adresse de livraison *</label>
-            ${addressList.map(([id, address]) => `
-                <label class="address-option" style="display: block; margin-bottom: 0.8rem; cursor: pointer;">
-                    <input type="radio" name="selectedAddress" value="${id}" ${address.isDefault ? 'checked' : ''} style="margin-right: 0.8rem; cursor: pointer;">
-                    <span style="font-weight: 600;">${address.addressName}</span><br>
-                    <span style="font-size: 0.9rem; color: #64748B; margin-left: 1.6rem;">${address.street}</span><br>
-                    <span style="font-size: 0.9rem; color: #64748B; margin-left: 1.6rem;">${address.city} - ${address.phone}</span>
-                    ${address.isDefault ? '<span style="margin-left: 1.6rem; background: #10B981; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Par défaut</span>' : ''}
-                </label>
-            `).join('')}
-        </div>
-    `;
-
-    // Ajouter event listeners
-    document.querySelectorAll('input[name="selectedAddress"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            selectedAddressId = e.target.value;
-        });
-    });
-
-    if (addressList.length > 0) {
-        selectedAddressId = addressList.find(([_, addr]) => addr.isDefault)?.[0] || addressList[0][0];
-    }
-
-    // Mettre à jour le bouton
-    if (addressList.length >= 3) {
-        toggleNewAddressBtn.style.display = 'none';
-    } else {
-        toggleNewAddressBtn.textContent = `+ Ajouter une nouvelle adresse (${addressList.length}/3)`;
-    }
-}
-
-function toggleNewAddressForm() {
-    newAddressSection.style.display = newAddressSection.style.display === 'none' ? 'block' : 'none';
-    if (newAddressSection.style.display === 'block') {
-        document.getElementById('newAddressName').focus();
-    }
-}
-
-cancelNewAddressBtn.addEventListener('click', () => {
-    toggleNewAddressForm();
-    newAddressForm.reset();
-});
-
-toggleNewAddressBtn.addEventListener('click', toggleNewAddressForm);
-
-newAddressForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const newAddress = {
-        addressName: document.getElementById('newAddressName').value,
-        street: document.getElementById('newAddressStreet').value,
-        city: document.getElementById('newAddressCity').value,
-        phone: document.getElementById('newAddressPhone').value
-    };
-
-    const result = await addressSystem.addAddress(currentUser.uid, newAddress);
-
-    if (result.success) {
-        showToast('Adresse ajoutée avec succès !', 'success');
-        newAddressForm.reset();
-        toggleNewAddressForm();
-        await loadAddresses();
-    } else {
-        showToast(result.message, 'error');
-    }
-});
 
 function loadOrderSummary() {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -210,7 +118,7 @@ async function sendOrderEmails(orderId, orderData) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    adminEmail: 'henocmarc1@gmail.com',
+                    adminEmail: 'admin@galax.com',
                     customerEmail: orderData.email,
                     customerName: orderData.fullName,
                     orderId: orderId,
@@ -233,26 +141,13 @@ checkoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     if (!currentUser) {
-        showToast('Vous devez être connecté pour passer une commande', 'warning');
+        alert('Vous devez être connecté pour passer une commande');
         return;
     }
 
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     if (cart.length === 0) {
-        showToast('Votre panier est vide', 'warning');
-        return;
-    }
-
-    if (!selectedAddressId) {
-        showToast('Sélectionnez une adresse de livraison', 'warning');
-        return;
-    }
-
-    const addresses = await addressSystem.loadUserAddresses(currentUser.uid);
-    const selectedAddress = addresses[selectedAddressId];
-
-    if (!selectedAddress) {
-        showToast('Adresse invalide', 'error');
+        alert('Votre panier est vide');
         return;
     }
 
@@ -262,9 +157,8 @@ checkoutForm.addEventListener('submit', async (e) => {
         fullName: document.getElementById('fullName').value,
         phone: document.getElementById('phone').value,
         email: document.getElementById('email').value,
-        address: selectedAddress.street,
-        city: selectedAddress.city,
-        addressName: selectedAddress.addressName,
+        address: document.getElementById('address').value,
+        city: document.getElementById('city').value,
         notes: document.getElementById('notes').value,
         paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
         items: cart,
@@ -283,11 +177,11 @@ checkoutForm.addEventListener('submit', async (e) => {
                 const newStock = productData.stock - item.quantity;
                 
                 if (newStock < 0) {
-                    showToast(`Stock insuffisant pour "${item.name}".`, 'warning');
+                    alert(`Stock insuffisant pour "${item.name}". Stock actuel : ${productData.stock}, quantité demandée : ${item.quantity}. Veuillez ajuster votre panier.`);
                     return;
                 }
             } else {
-                showToast(`Le produit "${item.name}" n'existe plus.`, 'error');
+                alert(`Le produit "${item.name}" n'existe plus. Veuillez retirer cet article de votre panier.`);
                 return;
             }
         }
@@ -331,7 +225,7 @@ checkoutForm.addEventListener('submit', async (e) => {
 
         if (stockUpdateFailed) {
             await remove(ref(database, `orders/${orderId}`));
-            showToast(`Stock insuffisant. La commande a été annulée.`, 'error');
+            alert(`Le stock de "${failedProduct}" a changé pendant le traitement. La commande a été annulée. Veuillez réessayer.`);
             return;
         }
 
@@ -340,13 +234,12 @@ checkoutForm.addEventListener('submit', async (e) => {
 
         sendOrderEmails(orderId, orderData);
 
-        showToast('Commande passée avec succès ! Redirection vers votre profil...', 'success');
-        setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
+        alert('Commande passée avec succès ! Un email de confirmation vous a été envoyé. Vous allez être redirigé vers votre profil.');
+        window.location.href = 'profile.html';
     } catch (error) {
         console.error('Erreur lors de la création de la commande:', error);
-        showToast('Erreur lors de la création de la commande. Veuillez réessayer.', 'error');
+        alert('Erreur lors de la création de la commande. Veuillez réessayer.');
     }
 });
 
 loadOrderSummary();
-loadAddresses();
