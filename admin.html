@@ -158,17 +158,7 @@
             <form id="productForm">
                 <input type="hidden" id="productId">
                 
-                <!-- TABS NAVIGATION -->
-                <div class="product-form-tabs">
-                    <button type="button" class="product-tab-btn active" data-tab="product-info">
-                        Information du produit
-                    </button>
-                    <button type="button" class="product-tab-btn" data-tab="product-extra">
-                        Information additionnel
-                    </button>
-                </div>
-
-                <!-- TAB 1: INFORMATION DU PRODUIT -->
+                <!-- INFORMATION DU PRODUIT -->
                 <div class="product-tab-panel active" id="product-info">
                     <div class="form-group">
                         <label for="productCode">ID Produit *</label>
@@ -180,8 +170,14 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="productName">Nom du produit *</label>
-                        <input type="text" id="productName" required>
+                        <label for="productName">Nom/Marque/Modèle du produit *</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="productName" placeholder="ex: Dior Sauvage, iPhone 15, Café Lavazza..." required style="flex: 1;">
+                            <button type="button" id="generateDescBtn" class="btn-secondary" style="white-space: nowrap; background: #8B5CF6; color: white; border: none;">
+                                <span class="material-icons" style="font-size: 18px;">sparkles</span> Générer
+                            </button>
+                        </div>
+                        <small style="color: #64748B;">💡 Entrez le nom/marque du produit et cliquez "Générer" pour créer la description automatiquement</small>
                     </div>
 
                     <div class="form-group">
@@ -202,7 +198,9 @@
 
                     <div class="form-group">
                         <label for="productDescription">Description *</label>
-                        <textarea id="productDescription" rows="3" required></textarea>
+                        <div id="productDescriptionPreview" style="background: #F8FAFC; padding: 1rem; border-radius: 8px; border: 1px solid #E2E8F0; min-height: 80px; max-height: 200px; overflow-y: auto; margin-bottom: 0.5rem; display: none;" contenteditable="true"></div>
+                        <textarea id="productDescription" rows="3" required style="display: none;"></textarea>
+                        <small style="color: #64748B;">La description s'affichera formatée ci-dessus après génération</small>
                     </div>
 
                     <div class="form-row">
@@ -261,38 +259,6 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: INFORMATION ADDITIONNEL (OPTIONNEL) -->
-                <div class="product-tab-panel" id="product-extra">
-                    <p style="color: #64748B; margin-bottom: 1.5rem; font-style: italic;">Tous les champs ci-dessous sont optionnels. Remplissez uniquement ce que vous souhaitez afficher sur le produit.</p>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productBrand">Marque</label>
-                            <input type="text" id="productBrand" placeholder="ex: Dior, L'Oréal, Nivea...">
-                        </div>
-                        <div class="form-group">
-                            <label for="productVolume">Volume/Poids</label>
-                            <input type="text" id="productVolume" placeholder="ex: 100 ml, 500g, 1 L...">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productFormat">Format/Taille</label>
-                            <input type="text" id="productFormat" placeholder="ex: Standard, XXL, Grand format...">
-                        </div>
-                        <div class="form-group">
-                            <label for="productOrigin">Origine/Provenance</label>
-                            <input type="text" id="productOrigin" placeholder="ex: France, Made in Italy, Fabriqué en Belgique...">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="productColor">Couleur/Variante</label>
-                        <input type="text" id="productColor" placeholder="ex: Rose, Bleu foncé, Parfum floral, Chocolat noir...">
-                    </div>
-                </div>
-
                 <div style="margin-top: 2rem; border-top: 1px solid #E2E8F0; padding-top: 1.5rem;">
                     <button type="submit" class="btn-primary btn-full">Enregistrer</button>
                 </div>
@@ -301,14 +267,18 @@
     </div>
 
     <script src="js/admin-dark-mode.js"></script>
-    <script type="module">
-        import('./js/firebase-config.js').then(() => {
-            import('./js/admin-stats.js');
-            import('./js/admin-audit.js');
-            import('./js/admin.js');
+    <script src="js/admin-export.js"></script>
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/admin-stats.js"></script>
+    <script type="module" src="js/admin-audit.js"></script>
+    <script type="module" src="js/admin.js"></script>
+    <script>
+        // Ensure libs are accessible
+        window.addEventListener('load', () => {
+            console.log('✅ Libraries loaded:');
+            console.log('  - Chart.js:', typeof Chart !== 'undefined');
+            console.log('  - html2pdf:', typeof html2pdf !== 'undefined');
         });
     </script>
 </body>
 </html>
-
-    <script src="js/admin-export.js"></script>

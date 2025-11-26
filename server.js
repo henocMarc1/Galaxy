@@ -220,6 +220,159 @@ app.post('/send-admin-notification', async (req, res) => {
   }
 });
 
+// ===== AI DESCRIPTION GENERATION ENDPOINT (GOOGLE GEMINI - GRATUIT) =====
+app.post('/api/generate-description', express.json(), async (req, res) => {
+  try {
+    const { productName } = req.body;
+    if (!productName) return res.status(400).json({ error: 'Product name required' });
+    
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'Clé API Google Gemini non configurée' });
+    
+    // Try different model names - Gemini API naming can vary
+    const modelNames = [
+      'gemini-2.0-flash',
+      'gemini-1.5-pro',
+      'gemini-1.5-flash',
+      'gemini-pro'
+    ];
+    
+    let response = null;
+    let lastError = null;
+    
+    for (const modelName of modelNames) {
+      try {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Génère une description COMPLÈTE et détaillée pour le produit: "${productName}"
+
+FORMAT:
+- Première ligne: Nom complet du produit avec marque
+- Ligne 2-3: Phrase d'accroche professionnelle
+- Puis: LES SPÉCIFICATIONS EN PUCES (•)
+
+SI ÉLECTRONIQUE génère:
+• Processeur/CPU
+• Mémoire RAM
+• Stockage
+• Batterie/Énergie
+• Écran/Résolution
+• Caméra
+• Poids
+• Couleur(s)
+• Résistance (eau, poussière)
+• Avantages
+
+SI PARFUM génère:
+• Volume (ml)
+• Type (Eau de Toilette, Eau de Parfum)
+• Marque
+• Notes (Tête/Cœur/Base)
+• Projection durée
+• Origine/Pays
+• Couleur
+• Utilisation
+
+SI ALIMENTAIRE génère:
+• Poids/Volume
+• Ingrédients principaux
+• Origine/Provenance
+• Conservation
+• Conditions stockage
+• Bénéfices
+
+SI MÉNAGER génère:
+• Volume (ml ou kg)
+• Composition/Matière active
+• Mode d'utilisation
+• Surface adaptée
+• Conservation
+
+Exemple format pour "iPhone 15" (utilise HTML pour les labels en gras):
+iPhone 15 - Smartphone Apple haute performance<br>
+L'iPhone 15 combine puissance et élégance avec les dernières innovations technologiques.<br>
+• <strong>Processeur:</strong> A18<br>
+• <strong>Mémoire:</strong> 6GB RAM<br>
+• <strong>Stockage:</strong> 128GB/256GB/512GB<br>
+• <strong>Batterie:</strong> 3582mAh<br>
+• <strong>Écran:</strong> 6.1" OLED Super Retina<br>
+• <strong>Caméra:</strong> 48MP principal, 12MP ultra grand-angle<br>
+• <strong>Poids:</strong> 171g<br>
+• <strong>Couleurs:</strong> Noir, Bleu, Rose, Blanc, Jaune<br>
+• <strong>Résistance:</strong> IP69 eau et poussière<br>
+• <strong>Avantages:</strong> Processeur ultra-rapide, batterie longue durée, camera professionnelle
+
+IMPORTANT: Utilise <strong>LABEL:</strong> pour TOUS les labels et <br> pour les sauts de ligne. Répondre UNIQUEMENT avec la description HTML.`
+              }]
+            }],
+            generationConfig: {
+              maxOutputTokens: 500,
+              temperature: 0.7
+            }
+          })
+        });
+        
+        if (response.ok) {
+          console.log(`✅ Modèle Gemini fonctionnant: ${modelName}`);
+          break;
+        } else {
+          lastError = await response.json();
+          console.log(`❌ ${modelName} pas disponible, essai suivant...`);
+        }
+      } catch (error) {
+        lastError = error;
+        console.log(`❌ Erreur ${modelName}: ${error.message}`);
+      }
+    }
+    
+    if (!response || !response.ok) {
+      const errorMsg = lastError?.error?.message || (typeof lastError === 'string' ? lastError : JSON.stringify(lastError));
+      return res.status(500).json({ error: 'Erreur Gemini API: ' + errorMsg });
+    }
+    
+    const data = await response.json();
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!responseText) {
+      return res.status(500).json({ error: 'API Gemini a pas retourné de description' });
+    }
+    
+    res.json({ description: responseText.trim() });
+  } catch (error) {
+    console.error('Erreur génération description:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ===== FETCH PRODUCT IMAGES - PLACEHOLDER FIABLE =====
+app.post('/api/search-images', express.json(), async (req, res) => {
+  try {
+    const { productName } = req.body;
+    if (!productName) return res.status(400).json({ error: 'Product name required' });
+    
+    console.log(`🔍 Images pour: "${productName}"`);
+    
+    // Utiliser des URLs placeholder stables qui FONCTIONNENT
+    const placeholderImages = [
+      `https://via.placeholder.com/500x500?text=${encodeURIComponent(productName)}+1`,
+      `https://via.placeholder.com/500x500?text=${encodeURIComponent(productName)}+2`,
+      `https://via.placeholder.com/500x500?text=${encodeURIComponent(productName)}+3`
+    ];
+    
+    console.log('✅ Images placeholder retournées');
+    res.json({ images: placeholderImages.map(url => ({ url, alt: productName })) });
+    
+  } catch (error) {
+    console.error('Erreur recherche images:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Serveur Galax démarré sur http://0.0.0.0:${PORT}`);
 });
