@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galax - Votre supermarché, vos parfums de rêve</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -14,46 +15,47 @@
                 <p class="slogan">Votre supermarché, vos parfums de rêve</p>
             </a>
             <div class="nav-links">
-                <a href="index.html">Accueil</a>
-                <div class="categories-dropdown">
-                    <button class="categories-btn" id="categoriesBtn">
-                        <span class="hamburger-icon">☰</span> Catégories
-                    </button>
-                    <div class="dropdown-menu" id="categoriesMenu">
-                        <a href="products.html?category=Promotions">🎉 Promotions</a>
-                        <a href="products.html?category=Parfums">🌟 Parfums</a>
-                        <a href="products.html?category=Épicerie">🛒 Épicerie</a>
-                        <a href="products.html?category=Boissons">🥤 Boissons</a>
-                        <a href="products.html?category=Hygiène & Beauté">💄 Hygiène & Beauté</a>
-                        <a href="products.html?category=Produits ménagers">🧼 Produits ménagers</a>
-                        <a href="products.html?category=Fruits & Légumes">🥬 Fruits & Légumes</a>
-                        <a href="products.html?category=Snacks">🍿 Snacks</a>
-                        <a href="products.html?category=Surgelés">❄️ Surgelés</a>
-                        <a href="products.html?category=Bébé & Maman">👶 Bébé & Maman</a>
-                    </div>
-                </div>
-                <a href="products.html">Produits</a>
-                <a href="cart.html" class="cart-link">
+                <a href="index.html" class="nav-link-item">
+                    <span class="material-icons">home</span>
+                    <span>Accueil</span>
+                </a>
+                <a href="products.html" class="nav-link-item">
+                    <span class="material-icons">shopping_bags</span>
+                    <span>Produits</span>
+                </a>
+                <a href="cart.html" class="nav-link-item cart-link">
+                    <span class="material-icons">shopping_cart</span>
                     <span>Panier</span>
                     <span class="cart-count">0</span>
                 </a>
-                <a href="profile.html" id="profileLink" style="display: none;">Profil</a>
-                <a href="auth.html" id="authLink">Connexion</a>
-                <button id="logoutBtn" style="display: none;">Déconnexion</button>
+                <a href="profile.html" id="profileLink" class="nav-link-item" style="display: none;">
+                    <span class="material-icons">person</span>
+                    <span>Profil</span>
+                </a>
+                <a href="auth.html" id="authLink" class="nav-link-item">
+                    <span class="material-icons">login</span>
+                    <span>Connexion</span>
+                </a>
+                <button id="logoutBtn" class="nav-link-item" style="display: none;">
+                    <span class="material-icons">logout</span>
+                    <span>Déconnexion</span>
+                </button>
             </div>
         </div>
     </nav>
+
+    <div class="mobile-header-brand">Galaxy</div>
 
     <section class="hero-banner">
         <div class="container">
             <div class="hero-card">
                 <div class="hero-left">
-                    <span class="hero-tag">✨ Service de livraison rapide</span>
+                    <span class="hero-tag"><span class="material-icons">local_shipping</span> Service de livraison rapide</span>
                     <h2>Parfums pour rendre votre journée Fresh</h2>
                     <p>Restez cool cet été avec nos parfums de luxe et produits disponibles en ligne.</p>
                     <div class="hero-buttons">
                         <a href="products.html" class="btn-primary">
-                            🛒 Voir les produits
+                            <span class="material-icons">shopping_cart</span> Voir les produits
                         </a>
                         <a href="#trending" class="btn-secondary">
                             Découvrir
@@ -70,7 +72,9 @@
                         <div class="label">Details</div>
                         <div class="price">25 000 FCFA</div>
                         <div class="volume">100 ml</div>
-                        <div class="stars">⭐⭐⭐⭐⭐</div>
+                        <div class="stars">
+                            <span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -79,8 +83,9 @@
 
     <section class="search-section">
         <div class="container">
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="Rechercher un produit...">
+            <div class="search-bar" style="position: relative;">
+                <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off">
+                <div id="searchAutocomplete" class="search-autocomplete"></div>
                 <button id="searchBtn">Rechercher</button>
             </div>
         </div>
@@ -89,18 +94,117 @@
 
     <section class="products-section" id="trending">
         <div class="container">
-            <h2>🔥 Produits en tendance</h2>
+            <div class="trending-header">
+                <h2><span class="material-icons">whatshot</span> Produits en tendance</h2>
+                <p class="trending-subtitle">Découvrez les articles les plus populaires et les nouveautés</p>
+            </div>
             <div class="products-grid" id="bestSellers"></div>
+        </div>
+    </section>
+
+    <section class="categories-section">
+        <div class="container">
+            <h2><span class="material-icons">apps</span> Toutes les catégories</h2>
+            <div class="categories-grid">
+                <a href="products.html?category=Parfums" class="category-card">
+                    <span class="material-icons">star</span>
+                    <h3>Parfums</h3>
+                    <p>Parfums de luxe & arabes</p>
+                </a>
+                <a href="products.html?category=Épicerie" class="category-card">
+                    <span class="material-icons">shopping_cart</span>
+                    <h3>Épicerie</h3>
+                    <p>Produits alimentaires</p>
+                </a>
+                <a href="products.html?category=Boissons" class="category-card">
+                    <span class="material-icons">local_cafe</span>
+                    <h3>Boissons</h3>
+                    <p>Jus, café, eau</p>
+                </a>
+                <a href="products.html?category=Hygiène & Beauté" class="category-card">
+                    <span class="material-icons">face</span>
+                    <h3>Hygiène & Beauté</h3>
+                    <p>Soins personnels</p>
+                </a>
+                <a href="products.html?category=Produits ménagers" class="category-card">
+                    <span class="material-icons">cleaning_services</span>
+                    <h3>Produits ménagers</h3>
+                    <p>Nettoyage & entretien</p>
+                </a>
+                <a href="products.html?category=Fruits & Légumes" class="category-card">
+                    <span class="material-icons">eco</span>
+                    <h3>Fruits & Légumes</h3>
+                    <p>Frais & naturels</p>
+                </a>
+                <a href="products.html?category=Snacks" class="category-card">
+                    <span class="material-icons">local_pizza</span>
+                    <h3>Snacks</h3>
+                    <p>Grignotines & biscuits</p>
+                </a>
+                <a href="products.html?category=Surgelés" class="category-card">
+                    <span class="material-icons">ac_unit</span>
+                    <h3>Surgelés</h3>
+                    <p>Aliments surgelés</p>
+                </a>
+                <a href="products.html?category=Bébé & Maman" class="category-card">
+                    <span class="material-icons">child_care</span>
+                    <h3>Bébé & Maman</h3>
+                    <p>Pour les petits</p>
+                </a>
+            </div>
         </div>
     </section>
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 Galax - Votre supermarché, vos parfums de rêve</p>
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4><span class="material-icons">store</span> Galax</h4>
+                    <p class="footer-slogan">Votre supermarché, vos parfums de rêve</p>
+                    <p class="footer-desc">Découvrez nos parfums de luxe, produits épicerie et bien plus encore!</p>
+                </div>
+                <div class="footer-section">
+                    <h4><span class="material-icons">shopping_bag</span> Shopping</h4>
+                    <ul>
+                        <li><a href="products.html">Tous les produits</a></li>
+                        <li><a href="products.html?category=Parfums">Parfums</a></li>
+                        <li><a href="products.html?category=Promotions">Promotions</a></li>
+                        <li><a href="products.html?category=Hygiène & Beauté">Beauté</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4><span class="material-icons">account_circle</span> Compte</h4>
+                    <ul>
+                        <li><a href="auth.html">Se connecter</a></li>
+                        <li><a href="profile.html">Mon profil</a></li>
+                        <li><a href="cart.html">Mon panier</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4><span class="material-icons">location_on</span> Localisation</h4>
+                    <p class="location-name">Gonzague Ville</p>
+                    <p class="location-desc">Terrain sur terre rouge</p>
+                    <div class="map-container">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15849.915873896944!2d-3.899578!3d5.241024!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfda9d7c7c7c7c7c7%3A0x0!2sGonzague%20Ville!5e0!3m2!1sfr!2sci!4v1700000000000" width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Galax - Votre supermarché, vos parfums de rêve. Tous droits réservés.</p>
+            </div>
         </div>
     </footer>
 
+    <script src="js/notifications.js"></script>
+    <script src="js/nav-active.js"></script>
     <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/autocomplete.js"></script>
+    <script type="module" src="js/promo-codes.js"></script>
     <script type="module" src="js/home.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSearchAutocomplete('searchInput', 'searchAutocomplete');
+        });
+    </script>
 </body>
 </html>

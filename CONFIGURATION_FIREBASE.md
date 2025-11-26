@@ -1,6 +1,6 @@
 # Configuration Firebase pour Galax
 
-## ⚠️ Important - Règles de sécurité Firebase
+## Important - Règles de sécurité Firebase
 
 Pour que l'application fonctionne correctement, vous devez configurer les règles de sécurité Firebase.
 
@@ -172,7 +172,7 @@ Dans la console Firebase, vous pouvez :
 
 ---
 
-## 🔧 Dépannage
+## Dépannage
 
 ### Erreur "Permission denied"
 → Vérifiez que les règles de sécurité sont bien configurées
@@ -188,4 +188,4 @@ Dans la console Firebase, vous pouvez :
 
 ---
 
-**Votre application Galax est maintenant prête à fonctionner ! 🚀**
+**Votre application Galax est maintenant prête à fonctionner ! **

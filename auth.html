@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - Galax</title>
@@ -20,22 +21,32 @@
                         <span class="hamburger-icon">☰</span> Catégories
                     </button>
                     <div class="dropdown-menu" id="categoriesMenu">
-                        <a href="products.html?category=Promotions">🎉 Promotions</a>
-                        <a href="products.html?category=Parfums">🌟 Parfums</a>
-                        <a href="products.html?category=Épicerie">🛒 Épicerie</a>
-                        <a href="products.html?category=Boissons">🥤 Boissons</a>
-                        <a href="products.html?category=Hygiène & Beauté">💄 Hygiène & Beauté</a>
-                        <a href="products.html?category=Produits ménagers">🧼 Produits ménagers</a>
-                        <a href="products.html?category=Fruits & Légumes">🥬 Fruits & Légumes</a>
-                        <a href="products.html?category=Snacks">🍿 Snacks</a>
-                        <a href="products.html?category=Surgelés">❄️ Surgelés</a>
-                        <a href="products.html?category=Bébé & Maman">👶 Bébé & Maman</a>
+                        <a href="products.html?category=Promotions"><span class="material-icons">local_offer</span> Promotions</a>
+                        <a href="products.html?category=Parfums"><span class="material-icons">star</span> Parfums</a>
+                        <a href="products.html?category=Épicerie"><span class="material-icons">shopping_cart</span> Épicerie</a>
+                        <a href="products.html?category=Boissons"><span class="material-icons">local_cafe</span> Boissons</a>
+                        <a href="products.html?category=Hygiène & Beauté"><span class="material-icons">face</span> Hygiène & Beauté</a>
+                        <a href="products.html?category=Produits ménagers"><span class="material-icons">cleaning_services</span> Produits ménagers</a>
+                        <a href="products.html?category=Fruits & Légumes"><span class="material-icons">eco</span> Fruits & Légumes</a>
+                        <a href="products.html?category=Snacks"><span class="material-icons">local_pizza</span> Snacks</a>
+                        <a href="products.html?category=Surgelés"><span class="material-icons">ac_unit</span> Surgelés</a>
+                        <a href="products.html?category=Bébé & Maman"><span class="material-icons">child_care</span> Bébé & Maman</a>
                     </div>
                 </div>
                 <a href="products.html">Produits</a>
             </div>
         </div>
     </nav>
+
+    <section class="search-section">
+        <div class="container">
+            <div class="search-bar" style="position: relative;">
+                <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off">
+                <div id="searchAutocomplete" class="search-autocomplete"></div>
+                <button id="searchBtn">Rechercher</button>
+            </div>
+        </div>
+    </section>
 
     <section class="auth-page">
         <div class="container">
@@ -99,6 +110,12 @@
     </footer>
 
     <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/autocomplete.js"></script>
     <script type="module" src="js/auth-page.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSearchAutocomplete('searchInput', 'searchAutocomplete');
+        });
+    </script>
 </body>
 </html>

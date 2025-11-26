@@ -39,7 +39,7 @@ async function loadUserProfile() {
         
         let errorMsg = `
             <div style="padding: 1.5rem; background: #FEF3C7; border-radius: 10px; border-left: 4px solid #F59E0B;">
-                <h3 style="color: #92400E; margin-bottom: 0.5rem;">⚠️ Erreur de chargement</h3>`;
+                <h3 style="color: #92400E; margin-bottom: 0.5rem;"><span class="material-icons" style="color: #F59E0B; vertical-align: middle;">warning</span> Erreur de chargement</h3>`;
         
         if (error.code) {
             errorMsg += `<p style="color: #92400E; font-size: 0.85rem;"><strong>Code:</strong> ${error.code}</p>`;
@@ -50,7 +50,7 @@ async function loadUserProfile() {
         
         errorMsg += `
                 <p style="color: #78350F; font-size: 0.9rem; margin-top: 0.5rem;">Vérifiez la configuration Firebase.</p>
-                <a href="CONFIGURATION_FIREBASE.md" target="_blank" style="color: #1E40AF; text-decoration: underline; font-size: 0.9rem; font-weight: bold;">📖 Voir le guide</a>
+                <a href="CONFIGURATION_FIREBASE.md" target="_blank" style="color: #1E40AF; text-decoration: underline; font-size: 0.9rem; font-weight: bold;"><span class="material-icons" style="vertical-align: middle;">menu_book</span> Voir le guide</a>
             </div>
         `;
         profileInfo.innerHTML = errorMsg;
@@ -109,7 +109,7 @@ async function loadUserOrders() {
         
         let errorMessage = `
             <div style="padding: 2rem; background: #FEF3C7; border-radius: 10px; border-left: 4px solid #F59E0B;">
-                <h3 style="color: #92400E; margin-bottom: 1rem;">⚠️ Erreur de chargement</h3>
+                <h3 style="color: #92400E; margin-bottom: 1rem;"><span class="material-icons" style="color: #F59E0B; vertical-align: middle;">warning</span> Erreur de chargement</h3>
                 <p style="color: #78350F; margin-bottom: 1rem;">Impossible de charger vos commandes. Détails de l'erreur :</p>`;
         
         if (error.code) {
@@ -127,7 +127,7 @@ async function loadUserOrders() {
                     <li>Vérifiez les <strong>règles de sécurité</strong> dans Firebase</li>
                     <li>Vérifiez que vous êtes bien <strong>connecté</strong> à l'application</li>
                 </ol>
-                <p style="color: #78350F;">📖 Guide complet : <a href="CONFIGURATION_FIREBASE.md" target="_blank" style="color: #1E40AF; text-decoration: underline; font-weight: bold;">CONFIGURATION_FIREBASE.md</a></p>
+                <p style="color: #78350F;"><span class="material-icons" style="vertical-align: middle;">menu_book</span> Guide complet : <a href="CONFIGURATION_FIREBASE.md" target="_blank" style="color: #1E40AF; text-decoration: underline; font-weight: bold;">CONFIGURATION_FIREBASE.md</a></p>
             </div>
         `;
         ordersContainer.innerHTML = errorMessage;

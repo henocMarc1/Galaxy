@@ -70,7 +70,7 @@ function loadCart() {
                         <span style="text-decoration: line-through; color: #94A3B8;">${originalTotal.toLocaleString()} FCFA</span>
                     </div>
                     <div class="summary-row" style="color: #10B981; font-weight: 600;">
-                        <span>🎉 Économies totales:</span>
+                        <span><span class="material-icons">local_offer</span> Économies totales:</span>
                         <span>-${totalSavings.toLocaleString()} FCFA</span>
                     </div>
                 ` : ''}

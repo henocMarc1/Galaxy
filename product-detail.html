@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Produit - Galax</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="js/notifications.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -14,39 +16,59 @@
                 <p class="slogan">Votre supermarché, vos parfums de rêve</p>
             </a>
             <div class="nav-links">
-                <a href="index.html">Accueil</a>
-                <div class="categories-dropdown">
-                    <button class="categories-btn" id="categoriesBtn">
-                        <span class="hamburger-icon">☰</span> Catégories
-                    </button>
-                    <div class="dropdown-menu" id="categoriesMenu">
-                        <a href="products.html?category=Promotions">🎉 Promotions</a>
-                        <a href="products.html?category=Parfums">🌟 Parfums</a>
-                        <a href="products.html?category=Épicerie">🛒 Épicerie</a>
-                        <a href="products.html?category=Boissons">🥤 Boissons</a>
-                        <a href="products.html?category=Hygiène & Beauté">💄 Hygiène & Beauté</a>
-                        <a href="products.html?category=Produits ménagers">🧼 Produits ménagers</a>
-                        <a href="products.html?category=Fruits & Légumes">🥬 Fruits & Légumes</a>
-                        <a href="products.html?category=Snacks">🍿 Snacks</a>
-                        <a href="products.html?category=Surgelés">❄️ Surgelés</a>
-                        <a href="products.html?category=Bébé & Maman">👶 Bébé & Maman</a>
-                    </div>
-                </div>
-                <a href="products.html">Produits</a>
-                <a href="cart.html" class="cart-link">
+                <a href="index.html" class="nav-link-item">
+                    <span class="material-icons">home</span>
+                    <span>Accueil</span>
+                </a>
+                <a href="products.html" class="nav-link-item">
+                    <span class="material-icons">shopping_bags</span>
+                    <span>Produits</span>
+                </a>
+                <a href="cart.html" class="nav-link-item cart-link">
+                    <span class="material-icons">shopping_cart</span>
                     <span>Panier</span>
                     <span class="cart-count">0</span>
                 </a>
-                <a href="profile.html" id="profileLink" style="display: none;">Profil</a>
-                <a href="auth.html" id="authLink">Connexion</a>
-                <button id="logoutBtn" style="display: none;">Déconnexion</button>
+                <a href="profile.html" id="profileLink" class="nav-link-item" style="display: none;">
+                    <span class="material-icons">person</span>
+                    <span>Profil</span>
+                </a>
+                <a href="auth.html" id="authLink" class="nav-link-item">
+                    <span class="material-icons">login</span>
+                    <span>Connexion</span>
+                </a>
+                <button id="logoutBtn" class="nav-link-item" style="display: none;">
+                    <span class="material-icons">logout</span>
+                    <span>Déconnexion</span>
+                </button>
             </div>
         </div>
     </nav>
 
+    <section class="search-section">
+        <div class="container">
+            <div class="search-bar" style="position: relative;">
+                <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off">
+                <div id="searchAutocomplete" class="search-autocomplete"></div>
+                <button id="searchBtn">Rechercher</button>
+            </div>
+        </div>
+    </section>
+
     <section class="product-detail">
         <div class="container">
+            <a href="javascript:history.back()" class="back-button">
+                <span class="material-icons">arrow_back</span>
+                <span>Retour</span>
+            </a>
             <div id="productContent"></div>
+        </div>
+    </section>
+
+    <section class="recommended-products" id="recommendedSection" style="display: none;">
+        <div class="container">
+            <h2>Produits qui pourraient vous intéresser</h2>
+            <div class="products-grid" id="recommendedGrid"></div>
         </div>
     </section>
 
@@ -56,7 +78,15 @@
         </div>
     </footer>
 
+    <script src="js/notifications.js"></script>
+    <script src="js/nav-active.js"></script>
     <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/autocomplete.js"></script>
     <script type="module" src="js/product-detail.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSearchAutocomplete('searchInput', 'searchAutocomplete');
+        });
+    </script>
 </body>
 </html>

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Produits - Galax</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="js/notifications.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -14,38 +16,54 @@
                 <p class="slogan">Votre supermarché, vos parfums de rêve</p>
             </a>
             <div class="nav-links">
-                <a href="index.html">Accueil</a>
-                <div class="categories-dropdown">
-                    <button class="categories-btn" id="categoriesBtn">
-                        <span class="hamburger-icon">☰</span> Catégories
-                    </button>
-                    <div class="dropdown-menu" id="categoriesMenu">
-                        <a href="products.html?category=Promotions">🎉 Promotions</a>
-                        <a href="products.html?category=Parfums">🌟 Parfums</a>
-                        <a href="products.html?category=Épicerie">🛒 Épicerie</a>
-                        <a href="products.html?category=Boissons">🥤 Boissons</a>
-                        <a href="products.html?category=Hygiène & Beauté">💄 Hygiène & Beauté</a>
-                        <a href="products.html?category=Produits ménagers">🧼 Produits ménagers</a>
-                        <a href="products.html?category=Fruits & Légumes">🥬 Fruits & Légumes</a>
-                        <a href="products.html?category=Snacks">🍿 Snacks</a>
-                        <a href="products.html?category=Surgelés">❄️ Surgelés</a>
-                        <a href="products.html?category=Bébé & Maman">👶 Bébé & Maman</a>
-                    </div>
-                </div>
-                <a href="products.html">Produits</a>
-                <a href="cart.html" class="cart-link">
+                <a href="index.html" class="nav-link-item">
+                    <span class="material-icons">home</span>
+                    <span>Accueil</span>
+                </a>
+                <a href="products.html" class="nav-link-item">
+                    <span class="material-icons">shopping_bags</span>
+                    <span>Produits</span>
+                </a>
+                <a href="cart.html" class="nav-link-item cart-link">
+                    <span class="material-icons">shopping_cart</span>
                     <span>Panier</span>
                     <span class="cart-count">0</span>
                 </a>
-                <a href="profile.html" id="profileLink" style="display: none;">Profil</a>
-                <a href="auth.html" id="authLink">Connexion</a>
-                <button id="logoutBtn" style="display: none;">Déconnexion</button>
+                <a href="profile.html" id="profileLink" class="nav-link-item" style="display: none;">
+                    <span class="material-icons">person</span>
+                    <span>Profil</span>
+                </a>
+                <a href="auth.html" id="authLink" class="nav-link-item">
+                    <span class="material-icons">login</span>
+                    <span>Connexion</span>
+                </a>
+                <button id="logoutBtn" class="nav-link-item" style="display: none;">
+                    <span class="material-icons">logout</span>
+                    <span>Déconnexion</span>
+                </button>
             </div>
         </div>
     </nav>
 
+    <div class="mobile-header-brand">Galaxy</div>
+
+    <section class="search-section">
+        <div class="container">
+            <div class="search-bar" style="position: relative;">
+                <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off">
+                <div id="searchAutocomplete" class="search-autocomplete"></div>
+                <button id="searchBtn">Rechercher</button>
+            </div>
+        </div>
+    </section>
+
     <section class="page-header">
         <div class="container">
+            <div class="breadcrumbs" id="breadcrumbs">
+                <a href="index.html">Accueil</a>
+                <span class="separator">/</span>
+                <span>Produits</span>
+            </div>
             <h1>Nos Produits</h1>
         </div>
     </section>
@@ -53,12 +71,19 @@
     <section class="products-page">
         <div class="container">
             <div class="products-layout">
-                <aside class="filters-sidebar">
+                <button id="toggleFilters" class="filter-toggle-btn" style="display: none;">
+                    <span class="material-icons">tune</span>
+                    <span>Filtres</span>
+                </button>
+                <aside class="filters-sidebar" id="filtersSidebar">
+                    <button class="close-filters-btn">
+                        <span class="material-icons">close</span>
+                    </button>
                     <h3>Filtres</h3>
                     
                     <div class="filter-group">
                         <h4>Catégories</h4>
-                        <label><input type="checkbox" value="Promotions" class="category-filter"> 🎉 Promotions</label>
+                        <label><input type="checkbox" value="Promotions" class="category-filter"> <span class="material-icons">local_offer</span> Promotions</label>
                         <label><input type="checkbox" value="Parfums" class="category-filter"> Parfums</label>
                         <label><input type="checkbox" value="Épicerie" class="category-filter"> Épicerie</label>
                         <label><input type="checkbox" value="Boissons" class="category-filter"> Boissons</label>
@@ -72,17 +97,21 @@
 
                     <div class="filter-group">
                         <h4>Prix</h4>
-                        <label><input type="radio" name="price" value="all" checked class="price-filter"> Tous les prix</label>
-                        <label><input type="radio" name="price" value="0-5000" class="price-filter"> Moins de 5 000 FCFA</label>
-                        <label><input type="radio" name="price" value="5000-10000" class="price-filter"> 5 000 - 10 000 FCFA</label>
-                        <label><input type="radio" name="price" value="10000-20000" class="price-filter"> 10 000 - 20 000 FCFA</label>
-                        <label><input type="radio" name="price" value="20000-50000" class="price-filter"> 20 000 - 50 000 FCFA</label>
-                        <label><input type="radio" name="price" value="50000+" class="price-filter"> Plus de 50 000 FCFA</label>
-                    </div>
-
-                    <div class="filter-group">
-                        <h4>Recherche</h4>
-                        <input type="text" id="filterSearch" placeholder="Rechercher...">
+                        <div class="price-slider-container">
+                            <div class="price-inputs">
+                                <input type="number" id="priceMin" placeholder="Min" class="price-input" value="0">
+                                <span>-</span>
+                                <input type="number" id="priceMax" placeholder="Max" class="price-input" value="100000">
+                            </div>
+                            <input type="range" id="priceMinSlider" min="0" max="100000" step="1000" value="0" class="price-slider">
+                            <input type="range" id="priceMaxSlider" min="0" max="100000" step="1000" value="100000" class="price-slider">
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                            <label><input type="radio" name="price" value="all" checked class="price-filter"> Tous les prix</label>
+                            <label><input type="radio" name="price" value="0-5000" class="price-filter"> &lt; 5K</label>
+                            <label><input type="radio" name="price" value="5000-10000" class="price-filter"> 5K-10K</label>
+                            <label><input type="radio" name="price" value="20000+" class="price-filter"> &gt; 20K</label>
+                        </div>
                     </div>
 
                     <button id="clearFilters" class="btn-secondary">Réinitialiser filtres</button>
@@ -91,6 +120,17 @@
                 <div class="products-content">
                     <div class="products-header">
                         <p id="productsCount">Chargement...</p>
+                        <div class="sort-container">
+                            <label for="sortSelect">Trier par:</label>
+                            <select id="sortSelect" class="sort-select">
+                                <option value="default">Par défaut</option>
+                                <option value="price-asc">Prix: bas à haut</option>
+                                <option value="price-desc">Prix: haut à bas</option>
+                                <option value="newest">Nouveautés</option>
+                                <option value="rating">Mieux notés</option>
+                                <option value="promo">Promotions</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="products-grid" id="productsGrid"></div>
                 </div>
@@ -98,13 +138,67 @@
         </div>
     </section>
 
+    <!-- QUICK VIEW MODAL -->
+    <div id="quickViewModal" class="quick-view-modal" style="display: none;">
+        <div class="quick-view-overlay"></div>
+        <div class="quick-view-content">
+            <button class="quick-view-close">
+                <span class="material-icons">close</span>
+            </button>
+            <div class="quick-view-container">
+                <div class="quick-view-image">
+                    <img id="quickViewMainImage" src="" alt="Product">
+                    <div class="quick-view-thumbnails" id="quickViewThumbnails"></div>
+                </div>
+                <div class="quick-view-details">
+                    <p class="quick-view-category" id="quickViewCategory"></p>
+                    <h2 id="quickViewName"></h2>
+                    <div class="quick-view-rating" id="quickViewRating"></div>
+                    <div class="quick-view-price">
+                        <span id="quickViewPrice"></span>
+                        <span id="quickViewOriginalPrice" class="original-price"></span>
+                    </div>
+                    <p id="quickViewDescription"></p>
+                    <div class="quick-view-actions">
+                        <div class="quantity-selector">
+                            <button id="quickViewQtyDecrement">
+                                <span class="material-icons">remove</span>
+                            </button>
+                            <input type="number" id="quickViewQty" value="1" min="1">
+                            <button id="quickViewQtyIncrement">
+                                <span class="material-icons">add</span>
+                            </button>
+                        </div>
+                        <button id="quickViewAddCart" class="btn-primary">
+                            <span class="material-icons">shopping_cart</span>
+                            Ajouter au panier
+                        </button>
+                    </div>
+                    <button id="quickViewViewFull" class="btn-secondary">
+                        <span class="material-icons">info</span>
+                        Voir détails complets
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
         <div class="container">
             <p>&copy; 2024 Galax - Votre supermarché, vos parfums de rêve</p>
         </div>
     </footer>
 
+    <script src="js/notifications.js"></script>
+    <script src="js/nav-active.js"></script>
     <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/autocomplete.js"></script>
+    <script type="module" src="js/promo-codes.js"></script>
     <script type="module" src="js/products-page.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSearchAutocomplete('searchInput', 'searchAutocomplete');
+        });
+    </script>
 </body>
 </html>
