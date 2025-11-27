@@ -87,6 +87,7 @@ registerForm.addEventListener('submit', async (e) => {
 window.handleGoogleSignIn = async function() {
     try {
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ 'client_id': '62981599754-t5m9gkhnm6ugt5qc8umh2420q0ulmni8.apps.googleusercontent.com' });
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         
