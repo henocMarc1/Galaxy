@@ -1,6 +1,6 @@
 import { auth, database } from './firebase-config.js';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { ref, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { ref, set, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
@@ -82,3 +82,37 @@ registerForm.addEventListener('submit', async (e) => {
         registerError.classList.add('show');
     }
 });
+
+// 🔵 Google Sign-in
+window.handleGoogleSignIn = async function() {
+    try {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        
+        // Créer/Mettre à jour le profil utilisateur dans Firebase
+        const userRef = ref(database, `users/${user.uid}`);
+        const userSnapshot = await get(userRef);
+        
+        if (!userSnapshot.exists()) {
+            await set(userRef, {
+                name: user.displayName || 'Google User',
+                email: user.email,
+                phone: '',
+                role: 'customer',
+                createdAt: new Date().toISOString()
+            });
+        }
+        
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Erreur Google Sign-in:', error);
+        if (error.code === 'auth/popup-closed-by-user') {
+            console.log('Popup fermée par l\'utilisateur');
+        } else if (error.code === 'auth/unauthorized-domain') {
+            alert('❌ Erreur: Domaine non autorisé.\n\nVérifiez que ce domaine est configuré dans Google Cloud Console:\n- Redirects URIs: Ajoute la URL actuelle');
+        } else {
+            alert('Erreur Google Sign-in. Vérifiez:\n1. Google est activé dans Firebase\n2. URIs autorisées dans Google Cloud');
+        }
+    }
+};

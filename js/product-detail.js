@@ -32,9 +32,9 @@ async function loadProduct() {
         
         if (snapshot.exists()) {
             const product = snapshot.val();
+            saveProductToHistory(product);
             displayProduct(product);
             
-            // Charger les recommandations en arrière-plan (ne pas bloquer l'affichage)
             loadRecommendedProducts(product.category);
         } else {
             document.getElementById('productContent').innerHTML = '<p>Produit non trouvé.</p>';
@@ -43,6 +43,15 @@ async function loadProduct() {
         console.error('Erreur lors du chargement du produit:', error);
         document.getElementById('productContent').innerHTML = '<p>Erreur lors du chargement du produit.</p>';
     }
+}
+
+function saveProductToHistory(product) {
+    let history = JSON.parse(localStorage.getItem('productHistory') || '[]');
+    const productData = { id: productId, name: product.name, price: product.price, image: Array.isArray(product.images) ? product.images[0] : product.image, timestamp: Date.now() };
+    history = history.filter(p => p.id !== productId);
+    history.unshift(productData);
+    history = history.slice(0, 20);
+    localStorage.setItem('productHistory', JSON.stringify(history));
 }
 
 async function loadCart() {
@@ -290,6 +299,7 @@ async function toggleFavorite(productId, productName) {
         
         const isFavorite = userFavorites[productId];
         const favoritesRef = ref(database, `users/${currentUser.uid}/favorites/${productId}`);
+        const favoriteBtn = document.querySelector('.favorite-btn');
         
         if (isFavorite) {
             await set(favoritesRef, null);
@@ -299,6 +309,13 @@ async function toggleFavorite(productId, productName) {
             await set(favoritesRef, { name: productName });
             userFavorites[productId] = { name: productName };
             showToast('Ajouté aux favoris', 'success');
+            
+            if (favoriteBtn) {
+                favoriteBtn.style.animation = 'heartPulse 0.6s ease-in-out';
+                setTimeout(() => {
+                    favoriteBtn.style.animation = '';
+                }, 600);
+            }
         }
         
         displayProduct(JSON.parse(localStorage.getItem(`product_${productId}`) || '{}'));

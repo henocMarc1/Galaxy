@@ -12,6 +12,8 @@ let currentUser = null;
 let userFavorites = {};
 let currentSort = 'default';
 let currentCart = {};
+let displayedProducts = 20;
+const PRODUCTS_PER_PAGE = 20;
 
 onAuthStateChanged(auth, (user) => {
     currentUser = user;
@@ -389,9 +391,11 @@ function displayProducts(products) {
         return;
     }
 
-    productsCount.textContent = `${products.length} produit${products.length > 1 ? 's' : ''}`;
+    displayedProducts = PRODUCTS_PER_PAGE;
+    productsCount.textContent = `${products.length} produit${products.length > 1 ? 's' : ''} ${products.length > displayedProducts ? `(${displayedProducts} affichés)` : ''}`;
 
-    productsGrid.innerHTML = products.map(product => {
+    const visibleProducts = products.slice(0, displayedProducts);
+    productsGrid.innerHTML = visibleProducts.map(product => {
         const discount = product.discount || 0;
         const hasDiscount = discount > 0;
         const discountedPrice = hasDiscount ? product.price * (1 - discount / 100) : product.price;
@@ -409,7 +413,7 @@ function displayProducts(products) {
             ${product.featured ? '<span class="product-badge featured"><span class="material-icons" style="font-size: 14px; vertical-align: middle;">trending_up</span> Populaire</span>' : ''}
             ${hasDiscount ? `<span class="product-badge promo"><span class="material-icons" style="font-size: 14px; vertical-align: middle;">local_offer</span> -${discount}%</span>` : ''}
             <a href="product-detail.html?id=${product.dbId}">
-                <img src="${Array.isArray(product.images) ? product.images[0] : product.image}" alt="${product.name}" class="product-image" onerror="this.src='https://via.placeholder.com/300x220/E2E8F0/64748B?text=Image+non+disponible'">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='220'%3E%3Crect fill='%23E2E8F0' width='300' height='220'/%3E%3C/svg%3E" data-src="${Array.isArray(product.images) ? product.images[0] : product.image}" alt="${product.name}" class="product-image lazy-image" onerror="this.src='https://via.placeholder.com/300x220/E2E8F0/64748B?text=Image'"
                 <div class="product-info">
                     <p class="product-category">${product.category}</p>
                     <h3 class="product-name">${product.name}</h3>
@@ -438,6 +442,23 @@ function displayProducts(products) {
         </div>
         `;
     }).join('');
+
+    if (products.length > displayedProducts) {
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.innerHTML = `<span class="material-icons">expand_more</span> Charger plus (${products.length - displayedProducts} restants)`;
+        loadMoreBtn.style.cssText = `
+            grid-column: 1/-1; padding: 1rem 2rem; background: #1E40AF; color: white;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            margin-top: 2rem;
+        `;
+        loadMoreBtn.onclick = () => {
+            displayedProducts += PRODUCTS_PER_PAGE;
+            displayProducts(products);
+        };
+        const gridContainer = productsGrid.parentElement;
+        gridContainer.appendChild(loadMoreBtn);
+    }
     
     // Favorite buttons
     document.querySelectorAll('.favorite-btn-card').forEach(btn => {
@@ -633,3 +654,48 @@ if (document.readyState === 'loading') {
     // DOM already loaded
     initializeProductsPage();
 }
+
+// Lazy Loading Images avec IntersectionObserver
+function initLazyLoading() {
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('lazy-image');
+                    observer.unobserve(img);
+                }
+            });
+        }, { rootMargin: '50px' });
+
+        document.querySelectorAll('.lazy-image').forEach(img => imageObserver.observe(img));
+    } else {
+        document.querySelectorAll('.lazy-image').forEach(img => img.src = img.dataset.src);
+    }
+}
+
+// Appeler après displayProducts
+const originalDisplay = displayProducts;
+displayProducts = function(products) {
+    originalDisplay.call(this, products);
+    initLazyLoading();
+};
+
+// Push Notifications
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+function sendNotification(title, options = {}) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+            icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="%231E40AF"/%3E%3Ctext x="50" y="60" font-size="40" text-anchor="middle" fill="white"%3EG%3C/text%3E%3C/svg%3E',
+            ...options
+        });
+    }
+}
+
+requestNotificationPermission();

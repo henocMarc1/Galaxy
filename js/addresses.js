@@ -88,6 +88,23 @@ export const addressSystem = {
         }
     },
 
+    // Éditer une adresse
+    async updateAddress(userId, addressId, addressData) {
+        try {
+            const addressPath = `users/${userId}/addresses/${addressId}`;
+            await update(ref(database), {
+                [addressPath]: {
+                    ...addressData,
+                    updatedAt: new Date().toISOString()
+                }
+            });
+            return { success: true };
+        } catch (error) {
+            console.error('Erreur mise à jour adresse:', error);
+            return { success: false };
+        }
+    },
+
     // Supprimer une adresse
     async deleteAddress(userId, addressId) {
         try {

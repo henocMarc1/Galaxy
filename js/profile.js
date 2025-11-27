@@ -238,7 +238,8 @@ async function loadAddresses() {
                         <p style="margin: 0.5rem 0; color: #64748B;"><strong>Ville:</strong> ${address.city}</p>
                         <p style="margin: 0.5rem 0 1rem 0; color: #64748B;"><strong>Téléphone:</strong> ${address.phone}</p>
                         <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
-                            ${!address.isDefault ? `<button onclick="setAddressDefault('${id}')" style="background: #F0F4FF; color: var(--primary-color); border: 1px solid var(--primary-color); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;"><span class="material-icons" style="vertical-align: middle; font-size: 18px;">check</span> Définir par défaut</button>` : ''}
+                            <button onclick="editAddress('${id}')" style="background: #F0F4FF; color: var(--primary-color); border: 1px solid var(--primary-color); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;"><span class="material-icons" style="vertical-align: middle; font-size: 18px;">edit</span> Éditer</button>
+                            ${!address.isDefault ? `<button onclick="setAddressDefault('${id}')" style="background: #F0F4FF; color: var(--primary-color); border: 1px solid var(--primary-color); padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;"><span class="material-icons" style="vertical-align: middle; font-size: 18px;">check</span> Par défaut</button>` : ''}
                             <button onclick="deleteAddress('${id}', '${address.addressName}')" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;"><span class="material-icons" style="vertical-align: middle; font-size: 18px;">delete</span> Supprimer</button>
                         </div>
                     </div>
@@ -252,8 +253,10 @@ async function loadAddresses() {
     }
 }
 
-function displayFavorites() {
-    if (userFavorites.length === 0) {
+function displayFavorites(filtered = null) {
+    const toDisplay = filtered || userFavorites;
+    
+    if (toDisplay.length === 0) {
         favoritesContainer.innerHTML = `
             <div style="text-align: center; padding: 3rem; background: #F8FAFC; border-radius: 10px;">
                 <span class="material-icons" style="font-size: 64px; color: #CBD5E1;">favorite_border</span>
@@ -264,9 +267,26 @@ function displayFavorites() {
         return;
     }
     
+    const categories = [...new Set(userFavorites.map(p => p.category))];
+    
     favoritesContainer.innerHTML = `
+        <div style="margin-bottom: 1.5rem; display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center;">
+            <select id="favCategoryFilter" style="padding: 0.6rem; border: 1px solid #CBD5E1; border-radius: 8px; cursor: pointer;">
+                <option value="">Toutes catégories</option>
+                ${categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+            </select>
+            <select id="favSortSelect" style="padding: 0.6rem; border: 1px solid #CBD5E1; border-radius: 8px; cursor: pointer;">
+                <option value="default">Par défaut</option>
+                <option value="price-asc">Prix: croissant</option>
+                <option value="price-desc">Prix: décroissant</option>
+                <option value="name">Nom (A-Z)</option>
+            </select>
+            <button onclick="addAllFavToCart()" style="background: var(--primary-color); color: white; padding: 0.6rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-left: auto;">
+                <span class="material-icons" style="vertical-align: middle;">shopping_cart</span> Ajouter tous au panier
+            </button>
+        </div>
         <div class="products-grid">
-            ${userFavorites.map(product => {
+            ${toDisplay.map(product => {
                 const discount = product.discount || 0;
                 const hasDiscount = discount > 0;
                 const discountedPrice = hasDiscount ? product.price * (1 - discount / 100) : product.price;
@@ -300,6 +320,47 @@ function displayFavorites() {
             }).join('')}
         </div>
     `;
+    
+    document.getElementById('favCategoryFilter')?.addEventListener('change', filterFavorites);
+    document.getElementById('favSortSelect')?.addEventListener('change', sortFavorites);
+}
+
+function filterFavorites() {
+    const category = document.getElementById('favCategoryFilter')?.value;
+    const sort = document.getElementById('favSortSelect')?.value || 'default';
+    let filtered = userFavorites;
+    
+    if (category) {
+        filtered = filtered.filter(p => p.category === category);
+    }
+    
+    filtered = sortFavoritesArray(filtered, sort);
+    displayFavorites(filtered);
+}
+
+function sortFavoritesArray(arr, sortType) {
+    const sorted = [...arr];
+    if (sortType === 'price-asc') sorted.sort((a, b) => a.price - b.price);
+    else if (sortType === 'price-desc') sorted.sort((a, b) => b.price - a.price);
+    else if (sortType === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
+    return sorted;
+}
+
+function sortFavorites() {
+    filterFavorites();
+}
+
+window.addAllFavToCart = async function() {
+    if (!currentUser || userFavorites.length === 0) return;
+    try {
+        for (const product of userFavorites) {
+            await addToCartFromFavorites(product.dbId, product.name, product.price, Array.isArray(product.images) ? product.images[0] : product.image, product.discount || 0, product.price);
+        }
+        showToast(`${userFavorites.length} produits ajoutés au panier!`, 'success');
+    } catch (error) {
+        console.error('Erreur:', error);
+        showToast('Erreur lors de l\'ajout au panier', 'error');
+    }
 }
 
 window.toggleFavorite = async function(productId) {

@@ -39,6 +39,30 @@ async function loadCartFromFirebase() {
     }
 }
 
+function displayRecentlyViewed() {
+    const recentProducts = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+    if (recentProducts.length === 0) return '';
+    
+    return `
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #E2E8F0;">
+            <h3 style="margin-bottom: 1.5rem;">Produits consultés récemment</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem;">
+                ${recentProducts.slice(0, 6).map(product => `
+                    <a href="product-detail.html?id=${product.id}" style="text-decoration: none;">
+                        <div style="background: var(--card-bg); border-radius: 12px; overflow: hidden; transition: all 0.3s;">
+                            <img src="${product.image}" alt="${product.name}" style="width: 100%; height: 150px; object-fit: cover;">
+                            <div style="padding: 0.75rem;">
+                                <p style="font-size: 0.85rem; font-weight: 600; margin: 0.5rem 0; color: var(--dark-color);">${product.name}</p>
+                                <p style="font-size: 0.9rem; color: var(--primary-color); font-weight: 700;">${product.price.toLocaleString()} FCFA</p>
+                            </div>
+                        </div>
+                    </a>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
 function displayCart(cart) {
     
     if (!cart || cart.length === 0) {
@@ -48,6 +72,7 @@ function displayCart(cart) {
                 <p>Découvrez nos produits et ajoutez-les à votre panier !</p>
                 <a href="products.html" class="btn-primary">Voir les produits</a>
             </div>
+            ${displayRecentlyViewed()}
         `;
         return;
     }
@@ -131,6 +156,7 @@ function displayCart(cart) {
                 </button>
             </div>
         </div>
+        ${displayRecentlyViewed()}
     `;
 }
 
@@ -151,6 +177,19 @@ window.updateQuantity = async function(index, change) {
                 await set(ref(database, `users/${currentUser.uid}/cart/${key}`), {
                     ...item,
                     quantity: newQuantity
+                });
+                const quantityElements = document.querySelectorAll(`[data-item-index="${index}"] .quantity-input`);
+                quantityElements.forEach(el => {
+                    const popup = document.createElement('div');
+                    popup.style.cssText = `
+                        position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+                        background: #10B981; color: white; padding: 4px 12px; border-radius: 20px;
+                        font-size: 0.8rem; font-weight: 600; white-space: nowrap; animation: popupFade 1s ease-out forwards;
+                    `;
+                    popup.textContent = '✓ Quantité mise à jour';
+                    el.parentElement.style.position = 'relative';
+                    el.parentElement.appendChild(popup);
+                    setTimeout(() => popup.remove(), 1000);
                 });
             }
             loadCartFromFirebase();

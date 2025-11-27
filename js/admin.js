@@ -1740,3 +1740,30 @@ document.getElementById('generateDescBtn')?.addEventListener('click', async (e) 
 });
 
 
+
+// Analytics Period Filter
+document.getElementById('analyticsPeriod')?.addEventListener('change', (e) => {
+    const period = e.target.value;
+    console.log('📊 Analytics period changed to:', period);
+    loadAdminStats(period);
+});
+
+// Orders Status & Date Filters
+document.getElementById('ordersStatusFilter')?.addEventListener('change', applyOrdersFilters);
+document.getElementById('ordersDateFilter')?.addEventListener('change', applyOrdersFilters);
+
+function applyOrdersFilters() {
+    const status = document.getElementById('ordersStatusFilter')?.value || '';
+    const date = document.getElementById('ordersDateFilter')?.value || '';
+    console.log('🔍 Filtering orders - Status:', status, 'Date:', date);
+}
+
+function clearOrdersFilters() {
+    document.getElementById('ordersStatusFilter').value = '';
+    document.getElementById('ordersDateFilter').value = '';
+    console.log('✅ Orders filters cleared');
+}
+
+async function loadAdminStats(period = '7') {
+    console.log('📈 Loading analytics for period:', period);
+}
