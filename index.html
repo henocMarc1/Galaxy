@@ -3,9 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Galax - Votre supermarché, vos parfums de rêve. Découvrez notre sélection exclusive de parfums de luxe et produits premium en ligne.">
+    <meta name="keywords" content="parfums, luxe, supermarché, e-commerce, parfums arabes">
+    <meta name="author" content="Galax Supermarket">
+    <meta name="theme-color" content="#1E40AF">
+    <meta property="og:title" content="Galax - Votre supermarché, vos parfums de rêve">
+    <meta property="og:description" content="Découvrez notre sélection exclusive de parfums de luxe et produits premium.">
+    <meta property="og:type" content="website">
     <title>Galax - Votre supermarché, vos parfums de rêve</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="css/styles.css">
+    <picture>
+        <source type="image/webp" srcset="data:image/webp;base64,">
+        <source type="image/png" srcset="">
+    </picture>
 </head>
 <body>
     <nav class="navbar">
@@ -190,6 +201,20 @@
                 </div>
             </div>
             <div class="footer-bottom">
+                <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem;">
+                    <a href="https://www.facebook.com/galax" target="_blank" rel="noopener" title="Facebook" style="color: #64748B; transition: color 0.3s;"><span class="material-icons" style="font-size: 24px;">facebook</span></a>
+                    <a href="https://www.instagram.com/galax" target="_blank" rel="noopener" title="Instagram" style="color: #64748B; transition: color 0.3s;"><span class="material-icons" style="font-size: 24px;">photo_camera</span></a>
+                    <a href="https://wa.me/221781234567" target="_blank" rel="noopener" title="WhatsApp" style="color: #64748B; transition: color 0.3s;"><span class="material-icons" style="font-size: 24px;">whatsapp</span></a>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 1rem; font-size: 0.9rem; flex-wrap: wrap;">
+                    <a href="#" style="color: #64748B; text-decoration: none;">Mentions légales</a>
+                    <span style="color: #CBD5E1;">|</span>
+                    <a href="#" style="color: #64748B; text-decoration: none;">CGV</a>
+                    <span style="color: #CBD5E1;">|</span>
+                    <a href="#" style="color: #64748B; text-decoration: none;">Politique de confidentialité</a>
+                    <span style="color: #CBD5E1;">|</span>
+                    <a href="#" style="color: #64748B; text-decoration: none;">Contact</a>
+                </div>
                 <p>&copy; 2025 Galax - Votre supermarché, vos parfums de rêve. Tous droits réservés.</p>
             </div>
         </div>
@@ -208,3 +233,8 @@
     </script>
 </body>
 </html>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('js/service-worker.js').catch(() => {});
+        }
+    </script>

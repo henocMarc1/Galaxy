@@ -85,7 +85,13 @@
             <div class="admin-tab-content active" id="analytics">
                 <div class="admin-header">
                     <h2>Analytics & Statistiques</h2>
-                    <div style="display: flex; gap: 1rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <select id="analyticsPeriod" class="sort-select" style="padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                            <option value="7">7 derniers jours</option>
+                            <option value="30">30 derniers jours</option>
+                            <option value="90">90 derniers jours</option>
+                            <option value="all">Tous les temps</option>
+                        </select>
                         <button id="exportCSV" class="btn-secondary">
                             <span class="material-icons">download</span> CSV
                         </button>
@@ -118,6 +124,18 @@
             <div class="admin-tab-content" id="orders">
                 <div class="admin-header">
                     <h2>Gestion des Commandes</h2>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <select id="ordersStatusFilter" class="sort-select" style="padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                            <option value="">Tous les statuts</option>
+                            <option value="pending">En attente</option>
+                            <option value="processing">En traitement</option>
+                            <option value="shipped">Expédiée</option>
+                            <option value="delivered">Livrée</option>
+                            <option value="cancelled">Annulée</option>
+                        </select>
+                        <input type="date" id="ordersDateFilter" class="sort-select" style="padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #E2E8F0;">
+                        <button onclick="clearOrdersFilters()" class="btn-secondary">Réinitialiser</button>
+                    </div>
                 </div>
                 <div id="ordersTable"></div>
             </div>

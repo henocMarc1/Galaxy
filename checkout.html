@@ -1,60 +1,28 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paiement - Galax</title>
+    <title>Finaliser la commande - Galax</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
-    <script src="js/notifications.js"></script>
-    <script src="js/nav-active.js"></script>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="index.html" class="nav-brand">
-                <h1>Galax</h1>
-                <p class="slogan">Votre supermarché, vos parfums de rêve</p>
+            <a href="index.html" class="logo">
+                <span class="material-icons">shopping_bag</span>
+                Galax
             </a>
             <div class="nav-links">
-                <a href="index.html" class="nav-link-item">
-                    <span class="material-icons">home</span>
-                    <span>Accueil</span>
-                </a>
-                <a href="products.html" class="nav-link-item">
-                    <span class="material-icons">shopping_bags</span>
-                    <span>Produits</span>
-                </a>
-                <a href="cart.html" class="nav-link-item cart-link">
-                    <span class="material-icons">shopping_cart</span>
-                    <span>Panier</span>
-                    <span class="cart-count">0</span>
-                </a>
-                <a href="profile.html" id="profileLink" class="nav-link-item" style="display: none;">
-                    <span class="material-icons">person</span>
-                    <span>Profil</span>
-                </a>
-                <a href="auth.html" id="authLink" class="nav-link-item">
-                    <span class="material-icons">login</span>
-                    <span>Connexion</span>
-                </a>
-                <button id="logoutBtn" class="nav-link-item" style="display: none;">
-                    <span class="material-icons">logout</span>
-                    <span>Déconnexion</span>
-                </button>
+                <a href="index.html"><span class="material-icons">home</span> Accueil</a>
+                <a href="products.html"><span class="material-icons">store</span> Produits</a>
+                <a href="cart.html"><span class="material-icons">shopping_cart</span> Panier<span class="cart-count" id="cartCount" style="display: none;">0</span></a>
+                <a href="profile.html"><span class="material-icons">person</span> Profil</a>
+                <a id="authLink" href="auth.html"><span class="material-icons">login</span> Connexion</a>
             </div>
         </div>
     </nav>
-
-    <section class="search-section">
-        <div class="container">
-            <div class="search-bar" style="position: relative;">
-                <input type="text" id="searchInput" placeholder="Rechercher un produit..." autocomplete="off">
-                <div id="searchAutocomplete" class="search-autocomplete"></div>
-                <button id="searchBtn">Rechercher</button>
-            </div>
-        </div>
-    </section>
 
     <section class="page-header">
         <div class="container">
@@ -81,11 +49,28 @@
                             </div>
                             <div class="form-group">
                                 <label for="newAddressStreet">Rue/Adresse *</label>
-                                <textarea id="newAddressStreet" rows="2" placeholder="Entrez votre adresse" required></textarea>
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <textarea id="newAddressStreet" rows="2" placeholder="Entrez votre adresse" required style="flex: 1;"></textarea>
+                                    <button type="button" onclick="getGeolocation()" style="background: #1E40AF; color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; align-self: flex-start; white-space: nowrap;">
+                                        <span class="material-icons" style="vertical-align: middle; font-size: 18px;">location_on</span>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="newAddressCity">Ville *</label>
-                                <input type="text" id="newAddressCity" placeholder="Ville" required>
+                                <input type="text" id="newAddressCity" placeholder="Ville" required autocomplete="address-level2" list="citySuggestions">
+                                <datalist id="citySuggestions">
+                                    <option value="Dakar"></option>
+                                    <option value="Thiès"></option>
+                                    <option value="Kaolack"></option>
+                                    <option value="Tambacounda"></option>
+                                    <option value="Louga"></option>
+                                    <option value="Matam"></option>
+                                    <option value="Kolda"></option>
+                                    <option value="Ziguinchor"></option>
+                                    <option value="Saint-Louis"></option>
+                                    <option value="Fatick"></option>
+                                </datalist>
                             </div>
                             <div class="form-group">
                                 <label for="newAddressPhone">Téléphone de livraison *</label>
@@ -144,6 +129,13 @@
                 </div>
 
                 <div class="order-summary">
+                    <div style="background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span class="material-icons" style="color: #10B981;">lock</span>
+                            <strong>Commande Sécurisée</strong>
+                        </div>
+                        <p style="font-size: 0.9rem; margin: 0; opacity: 0.9;">Vos données sont protégées par chiffrement SSL</p>
+                    </div>
                     <h2>Résumé de la commande</h2>
                     <div id="orderSummary"></div>
                 </div>
@@ -170,6 +162,22 @@
         document.addEventListener('DOMContentLoaded', function() {
             setupSearchAutocomplete('searchInput', 'searchAutocomplete');
         });
+    </script>
+    <script>
+        function getGeolocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        document.getElementById('newAddressStreet').value = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    },
+                    function(error) {
+                        alert('❌ Localisation: ' + error.message);
+                    }
+                );
+            }
+        }
     </script>
 </body>
 </html>
